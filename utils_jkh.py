@@ -17,6 +17,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import mysql.connector as con
 
 import config_jkh
 
@@ -315,7 +316,13 @@ def get_info_from_chek() -> list:
 # формирование отчетов
 def select_from_postav():
     try:
-        cursor = config_jkh.connection.cursor()
+        connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+        cursor = connection.cursor()
         # sql запрос
         select = ''' SELECT name, inn, schet, bik FROM pay_jkh.postavshiki; '''
         #метод объекта курсора, который выполняет SQL-запрос
@@ -323,7 +330,7 @@ def select_from_postav():
         # метод в Python, который извлекает все строки результата запроса и возвращает их в виде списка кортежей.
         data = cursor.fetchall()
         # метод commit сохраняет все изменения, внесённые в рамках транзакции, и делает их постоянными
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные выведены')
         # Приведенеие списка из БД в формат DataFrame, с указанием индексов столбцов в виде названий
         df = pd.DataFrame(data, columns=['Наиименование', 'ИНН', 'Счет организации', 'БИК'])
@@ -339,16 +346,23 @@ def select_from_postav():
         pp.close()
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
 
 def select_from_lsch():
     try:
-        cursor = config_jkh.connection.cursor()
+        connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+        cursor = connection.cursor()
         # sql запрос
         select = ''' SELECT name, gaz, water, light, yk, garbage, kap_rem, warm FROM pay_jkh.flat_ls; '''
         #метод объекта курсора, который выполняет SQL-запрос
@@ -356,7 +370,7 @@ def select_from_lsch():
         # метод в Python, который извлекает все строки результата запроса и возвращает их в виде списка кортежей.
         data = cursor.fetchall()
         # метод commit сохраняет все изменения, внесённые в рамках транзакции, и делает их постоянными
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные выведены')
         # Приведенеие списка из БД в формат DataFrame, с указанием индексов столбцов в виде названий
         df = pd.DataFrame(data, columns=['Наиименование', 'Газпром', 'Водоканал', 'ТНС Энерго', 'УК', 'Экотранс', 'ФКР', 'Теплоэнерго'])
@@ -372,16 +386,23 @@ def select_from_lsch():
         pp.close()
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
 
 def select_from_pay_month(month):
     try:
-        cursor = config_jkh.connection.cursor()
+        connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+        cursor = connection.cursor()
         # sql запрос
         select = f''' SELECT name, num, date, usl, summ, pokaz FROM pay JOIN flat_ls ON flat_ls.kf = pay.kf
         WHERE MONTH(date)={month} '''
@@ -396,7 +417,7 @@ def select_from_pay_month(month):
         # метод в Python, который извлекает все строки результата запроса и возвращает их в виде списка кортежей.
         data_2 = cursor.fetchall()
         # метод commit сохраняет все изменения, внесённые в рамках транзакции, и делает их постоянными
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные выведены')
         # Приведенеие списка из БД в формат DataFrame, с указанием индексов столбцов в виде названий
         df = pd.DataFrame(data_1, columns=['Наименование', '№', 'Дата', 'Услуга', 'Сумма', 'Показания'])
@@ -413,16 +434,23 @@ def select_from_pay_month(month):
         return data_2[0][0]
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
 
 def select_from_pay_year(kf, kp, year):
     try:
-        cursor = config_jkh.connection.cursor()
+        connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+        cursor = connection.cursor()
         # sql запрос
         select = f''' SELECT name, num, date, usl, summ, pokaz 
         FROM pay JOIN flat_ls ON flat_ls.kf = pay.kf
@@ -432,7 +460,7 @@ def select_from_pay_year(kf, kp, year):
         # метод в Python, который извлекает все строки результата запроса и возвращает их в виде списка кортежей.
         data = cursor.fetchall()
         # метод commit сохраняет все изменения, внесённые в рамках транзакции, и делает их постоянными
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные выведены')
         # Приведенеие списка из БД в формат DataFrame, с указанием индексов столбцов в виде названий
         df = pd.DataFrame(data, columns=['Наименование', '№', 'Дата', 'Услуга', 'Сумма', 'Показания'])
@@ -448,12 +476,13 @@ def select_from_pay_year(kf, kp, year):
         pp.close()
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
 
 
 # класс для выполения операций на СБОЛ 
@@ -550,7 +579,6 @@ class SBOL:
         input_text(okno_2, kod[1])
         input_text(okno_3, kod[2])
         input_text(okno_4, kod[3])
-        time.sleep(3)
         self.driver.save_screenshot("screenshot_tutorialspoint.png")
         if input_text(okno_5, kod[-1]):
             success_locator = (By.XPATH, '//*[@id="main"]/div/div/section[1]/div[3]/div[2]/div/div[2]/div/div/div/div[1]/a') 

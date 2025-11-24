@@ -1,12 +1,5 @@
-import mysql.connector as con
 
-# установка соединения с бд MYSQL
-connection = con.connect(
-      host='127.0.0.1',
-      user='sanyabanda23',
-      password='Mashenka1!',
-      database='pay_jkh'
-)
+con_sql = ('127.0.0.1', 'sanyabanda23', 'Mashenka1!', 'pay_jkh')
 
 BOT_TOKEN = '8452662654:AAFwF6mapAm0wQY148pPFCpvMcJfqtE3K8A'
 REDIS_URL = 'redis://127.0.0.1:6379/0'

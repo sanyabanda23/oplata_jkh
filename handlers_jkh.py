@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.chat_action import ChatActionSender
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types.input_file import FSInputFile
-
+import mysql.connector as con
 
 import kb_jkh, config_jkh, utils_jkh, text_jkh
 from state_jkh import Vhod, Clear, Opl_kr_pt, Opl_kr_fr, Opl_kr_in, Opl_kr_dm
@@ -242,49 +242,77 @@ async def info_pay_year(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'dm')
 async def opl_zkh_dm(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+      host=config_jkh.con_sql[0],
+      user=config_jkh.con_sql[1],
+      password=config_jkh.con_sql[2],
+      database=config_jkh.con_sql[3]
+    )
+    cursor = connection.cursor()
     select = ''' SELECT name FROM flat_ls WHERE kf = 'dm' '''
     cursor.execute(select)
     data = cursor.fetchall()
-    config_jkh.connection.commit()
+    connection.commit()
     print('Данные получены')
     cursor.close()
+    connection.close()
     await call.message.answer(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_dm())
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'fr')
 async def opl_zkh_fr(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+      host=config_jkh.con_sql[0],
+      user=config_jkh.con_sql[1],
+      password=config_jkh.con_sql[2],
+      database=config_jkh.con_sql[3]
+    )
+    cursor = connection.cursor()
     select = ''' SELECT name FROM flat_ls WHERE kf = 'fr' '''
     cursor.execute(select)
     data = cursor.fetchall()
-    config_jkh.connection.commit()
+    connection.commit()
     print('Данные получены')
     cursor.close()
+    connection.close()
     await call.message.answer(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_fr())
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'pt')
 async def opl_zkh_pt(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+      host=config_jkh.con_sql[0],
+      user=config_jkh.con_sql[1],
+      password=config_jkh.con_sql[2],
+      database=config_jkh.con_sql[3]
+    )
+    cursor = connection.cursor()
     select = ''' SELECT name FROM flat_ls WHERE kf = 'pt' '''
     cursor.execute(select)
     data = cursor.fetchall()
-    config_jkh.connection.commit()
+    connection.commit()
     print('Данные получены')
     cursor.close()
+    connection.close()
     await call.message.answer(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_pt())
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'in')
 async def opl_zkh_in(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+      host=config_jkh.con_sql[0],
+      user=config_jkh.con_sql[1],
+      password=config_jkh.con_sql[2],
+      database=config_jkh.con_sql[3]
+    )
+    cursor = connection.cursor()
     select = ''' SELECT name FROM flat_ls WHERE kf = 'in' '''
     cursor.execute(select)
     data = cursor.fetchall()
-    config_jkh.connection.commit()
+    connection.commit()
     print('Данные получены')
     cursor.close()
+    connection.close()
     await call.message.answer(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_in())
 
 ###### Реакция кнопок в клавиатуре оплата ЖКХ
@@ -299,7 +327,13 @@ async def back_vibor_kv(call: CallbackQuery, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'krpt')
 async def opl_kr_pt_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+      host=config_jkh.con_sql[0],
+      user=config_jkh.con_sql[1],
+      password=config_jkh.con_sql[2],
+      database=config_jkh.con_sql[3]
+    )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, kap_rem, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -309,16 +343,17 @@ async def opl_kr_pt_preparetion(call: CallbackQuery, state: FSMContext):
         inn = data[0][0]
         l_sch = data[0][1]
         summ = str(data[0][2])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_kr(inn=inn, l_sch=l_sch, summ=summ)
     if input_value[0] is True:
@@ -349,20 +384,27 @@ async def opl_kr_pt(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'pt', 'kr', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_pt())
             await state.clear()
         else:
@@ -386,7 +428,13 @@ async def opl_kr_pt(msg: Message, state: FSMContext):
 async def opl_kr_pt(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, kap_rem, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -395,16 +443,17 @@ async def opl_kr_pt(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_kr(inn=inn, l_sch=l_sch, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -417,7 +466,13 @@ async def opl_kr_pt(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'krfr')
 async def opl_kr_fr_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, kap_rem, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -427,16 +482,17 @@ async def opl_kr_fr_preparetion(call: CallbackQuery, state: FSMContext):
         inn = data[0][0]
         l_sch = data[0][1]
         summ = str(data[0][2])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_kr(inn=inn, l_sch=l_sch, summ=summ)
     if input_value[0] is True:
@@ -467,20 +523,27 @@ async def opl_kr_fr(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'fr', 'kr', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_fr())
             await state.clear()
         else:
@@ -504,7 +567,13 @@ async def opl_kr_fr(msg: Message, state: FSMContext):
 async def opl_kr_fr(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, kap_rem, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -513,16 +582,17 @@ async def opl_kr_fr(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_kr(inn=inn, l_sch=l_sch, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -535,7 +605,13 @@ async def opl_kr_fr(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'krin')
 async def opl_kr_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, kap_rem, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -545,16 +621,17 @@ async def opl_kr_in_preparetion(call: CallbackQuery, state: FSMContext):
         inn = data[0][0]
         l_sch = data[0][1]
         summ = str(data[0][2])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_kr(inn=inn, l_sch=l_sch, summ=summ)
     if input_value[0] is True:
@@ -585,20 +662,27 @@ async def opl_kr_in(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'in', 'kr', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_in())
             await state.clear()
         else:
@@ -622,7 +706,13 @@ async def opl_kr_in(msg: Message, state: FSMContext):
 async def opl_kr_in(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, kap_rem, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -631,16 +721,17 @@ async def opl_kr_in(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_kr(inn=inn, l_sch=l_sch, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -653,7 +744,13 @@ async def opl_kr_in(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'krdm')
 async def opl_kr_dm_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, kap_rem, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -663,16 +760,17 @@ async def opl_kr_dm_preparetion(call: CallbackQuery, state: FSMContext):
         inn = data[0][0]
         l_sch = data[0][1]
         summ = str(data[0][2])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_kr(inn=inn, l_sch=l_sch, summ=summ)
     if input_value[0] is True:
@@ -703,20 +801,27 @@ async def opl_kr_dm(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'dm', 'kr', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_dm())
             await state.clear()
         else:
@@ -740,7 +845,13 @@ async def opl_kr_dm(msg: Message, state: FSMContext):
 async def opl_kr_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, kap_rem, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -749,16 +860,17 @@ async def opl_kr_dm(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_kr(inn=inn, l_sch=l_sch, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -771,7 +883,13 @@ async def opl_kr_dm(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gbdm')
 async def opl_gb_dm_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, garbage, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -781,16 +899,17 @@ async def opl_gb_dm_preparetion(call: CallbackQuery, state: FSMContext):
         inn = data[0][0]
         l_sch = data[0][1]
         summ = str(data[0][2])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gb(inn=inn, l_sch=l_sch, summ=summ)
     if input_value[0] is True:
@@ -821,20 +940,27 @@ async def opl_gb_dm(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'dm', 'gb', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_dm())
             await state.clear()
         else:
@@ -858,7 +984,13 @@ async def opl_gb_dm(msg: Message, state: FSMContext):
 async def opl_gb_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, garbage, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -867,16 +999,17 @@ async def opl_gb_dm(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gb(inn=inn, l_sch=l_sch, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -889,7 +1022,13 @@ async def opl_gb_dm(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gbin')
 async def opl_gb_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, garbage, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -899,16 +1038,17 @@ async def opl_gb_in_preparetion(call: CallbackQuery, state: FSMContext):
         inn = data[0][0]
         l_sch = data[0][1]
         summ = str(data[0][2])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gb(inn=inn, l_sch=l_sch, summ=summ)
     if input_value[0] is True:
@@ -939,20 +1079,27 @@ async def opl_gb_in(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'in', 'gb', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_in())
             await state.clear()
         else:
@@ -976,7 +1123,13 @@ async def opl_gb_in(msg: Message, state: FSMContext):
 async def opl_gb_in(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, garbage, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -985,16 +1138,17 @@ async def opl_gb_in(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gb(inn=inn, l_sch=l_sch, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -1007,7 +1161,13 @@ async def opl_gb_in(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'ykdm')
 async def opl_yk_dm_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, yk, schet, bik, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1019,16 +1179,17 @@ async def opl_yk_dm_preparetion(call: CallbackQuery, state: FSMContext):
         schet = data[0][2]
         bik = data[0][3]
         summ = str(data[0][4])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_yk_dm(inn=inn, l_sch=l_sch, schet=schet, bik=bik, summ=summ)
     if input_value[0] is True:
@@ -1059,20 +1220,27 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'dm', 'ykd', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_dm())
             await state.clear()
         else:
@@ -1096,7 +1264,13 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
 async def opl_yk_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, yk, schet, bik, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1107,16 +1281,17 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
         l_sch = data[0][1]
         schet = data[0][2]
         bik = data[0][3]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_yk_dm(inn=inn, l_sch=l_sch, schet=schet, bik=bik, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -1129,7 +1304,13 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'ykin')
 async def opl_yk_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT yk, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1138,16 +1319,17 @@ async def opl_yk_in_preparetion(call: CallbackQuery, state: FSMContext):
         data = cursor.fetchall()
         l_sch = data[0][0]
         summ = str(data[0][1])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_yk_in(l_sch=l_sch, summ=summ)
     if input_value[0] is True:
@@ -1178,20 +1360,27 @@ async def opl_yk_in(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'in', 'yki', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_in())
             await state.clear()
         else:
@@ -1215,7 +1404,13 @@ async def opl_yk_in(msg: Message, state: FSMContext):
 async def opl_yk_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT yk, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1223,16 +1418,17 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
         cursor.execute(select)
         data = cursor.fetchall()
         l_sch = data[0][0]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_yk_in(l_sch=l_sch, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -1269,7 +1465,13 @@ async def opl_yk_fr_hwt(msg: Message, state: FSMContext):
 @router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_yk_fr.pok_hwt)
 async def opl_yk_fr_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_hwt=msg.text)
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, yk, schet, bik, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1281,16 +1483,17 @@ async def opl_yk_fr_preparetion(msg: Message, state: FSMContext):
         schet = data[0][2]
         bik = data[0][3]
         summ = str(data[0][4])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     data_pokaz = await state.get_data()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_yk_fr(inn=inn, l_sch=l_sch, schet=schet, bik=bik, pok_lt=data_pokaz.get('pok_lt'), pok_cwt=data_pokaz.get('pok_cwt'), pok_hwt=data_pokaz.get('pok_hwt'), summ=summ)
@@ -1328,7 +1531,13 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'fr', 'ykf', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
@@ -1345,15 +1554,16 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
                 new_pokaz_hwt = (pokaz_hwt, 'fr', 'hwt')
                 request_to_update_pokaz_hwt = "UPDATE pokazania SET pokaz = %s WHERE kf = %s AND tip_wt = %s"
                 cursor.execute(request_to_update_pokaz_hwt, new_pokaz_hwt) 
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_fr())
             await state.clear()
         else:
@@ -1377,7 +1587,13 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
 async def opl_yk_fr(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, yk, schet, bik, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1388,16 +1604,17 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
         l_sch = data[0][1]
         schet = data[0][2]
         bik = data[0][3]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_yk_fr(inn=inn, l_sch=l_sch, schet=schet, bik=bik, pok_lt=data_summ.get('pok_lt'), pok_cwt=data_summ.get('pok_cwt'), pok_hwt=data_summ.get('pok_hwt'), summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -1411,7 +1628,13 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'wmin')
 async def opl_wm_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, warm, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1421,16 +1644,17 @@ async def opl_wm_in_preparetion(call: CallbackQuery, state: FSMContext):
         inn = data[0][0]
         l_sch = data[0][1]
         summ = str(data[0][2])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_wm(inn=inn, l_sch=l_sch, summ=summ)
     if input_value[0] is True:
@@ -1461,20 +1685,27 @@ async def opl_wm_in(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'in', 'wm', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_in())
             await state.clear()
         else:
@@ -1498,7 +1729,13 @@ async def opl_wm_in(msg: Message, state: FSMContext):
 async def opl_wm_in(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, warm, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1507,16 +1744,17 @@ async def opl_wm_in(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_wm(inn=inn, l_sch=l_sch, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -1535,7 +1773,13 @@ async def opl_wt_dm_pok(call: CallbackQuery, state: FSMContext):
 @router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_wt_dm.pok_wt)
 async def opl_wt_dm_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_wt=msg.text)
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, water, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1546,16 +1790,17 @@ async def opl_wt_dm_preparetion(msg: Message, state: FSMContext):
         l_sch = data[0][1]
         pok = data[0][2]
         summ = str(data[0][3])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     data_pokaz = await state.get_data()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_wt(inn=inn, l_sch=l_sch, pok=data_pokaz.get('pok_wt'), summ=summ)
@@ -1588,21 +1833,28 @@ async def opl_wt_dm(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'dm', 'wt', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
 
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_dm())
             await state.clear()
         else:
@@ -1626,7 +1878,13 @@ async def opl_wt_dm(msg: Message, state: FSMContext):
 async def opl_wt_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, water, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1635,16 +1893,17 @@ async def opl_wt_dm(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_wt(inn=inn, l_sch=l_sch, pok=data_summ.get('pok_wt'), summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -1658,7 +1917,13 @@ async def opl_wt_dm(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'wtpt')
 async def opl_wt_pt_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, water, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1669,16 +1934,17 @@ async def opl_wt_pt_preparetion(call: CallbackQuery, state: FSMContext):
         l_sch = data[0][1]
         pok = data[0][2]
         summ = str(data[0][3])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_wt(inn=inn, l_sch=l_sch, pok=pok, summ=summ)
     if input_value[0] is True:
@@ -1709,20 +1975,27 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'pt', 'wt', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_pt())
             await state.clear()
         else:
@@ -1746,7 +2019,13 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
 async def opl_wt_pt(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, water, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1756,16 +2035,17 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
         inn = data[0][0]
         l_sch = data[0][1]
         pok = data[0][2]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_wt(inn=inn, l_sch=l_sch, pok=pok, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -1778,7 +2058,13 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'wtin')
 async def opl_wt_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, water, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1789,16 +2075,17 @@ async def opl_wt_in_preparetion(call: CallbackQuery, state: FSMContext):
         l_sch = data[0][1]
         pok = data[0][2]
         summ = str(data[0][3])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_wt(inn=inn, l_sch=l_sch, pok=pok, summ=summ)
     if input_value[0] is True:
@@ -1829,20 +2116,27 @@ async def opl_wt_in(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'in', 'wt', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_in())
             await state.clear()
         else:
@@ -1866,7 +2160,13 @@ async def opl_wt_in(msg: Message, state: FSMContext):
 async def opl_wt_in(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, water, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1876,16 +2176,17 @@ async def opl_wt_in(msg: Message, state: FSMContext):
         inn = data[0][0]
         l_sch = data[0][1]
         pok = data[0][2]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_wt(inn=inn, l_sch=l_sch, pok=pok, summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -1904,7 +2205,13 @@ async def opl_lt_dm_pok(call: CallbackQuery, state: FSMContext):
 @router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_lt_dm.pok_lt)
 async def opl_lt_dm_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_lt=msg.text)
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, light, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -1915,16 +2222,17 @@ async def opl_lt_dm_preparetion(msg: Message, state: FSMContext):
         l_sch = data[0][1]
         pok = data[0][2]
         summ = str(data[0][3])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     data_pokaz = await state.get_data()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_lt(inn=inn, l_sch=l_sch, pok=data_pokaz.get('pok_lt'), summ=summ)
@@ -1957,21 +2265,28 @@ async def opl_lt_dm(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'dm', 'lt', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
 
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_dm())
             await state.clear()
         else:
@@ -1995,7 +2310,13 @@ async def opl_lt_dm(msg: Message, state: FSMContext):
 async def opl_lt_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, light, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -2004,16 +2325,17 @@ async def opl_lt_dm(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_lt(inn=inn, l_sch=l_sch, pok=data_summ.get('pok_lt'), summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -2033,7 +2355,13 @@ async def opl_lt_pt_pok(call: CallbackQuery, state: FSMContext):
 @router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_lt_pt.pok_lt)
 async def opl_lt_pt_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_lt=msg.text)
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, light, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -2044,16 +2372,17 @@ async def opl_lt_pt_preparetion(msg: Message, state: FSMContext):
         l_sch = data[0][1]
         pok = data[0][2]
         summ = str(data[0][3])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     data_pokaz = await state.get_data()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_lt(inn=inn, l_sch=l_sch, pok=data_pokaz.get('pok_lt'), summ=summ)
@@ -2086,21 +2415,28 @@ async def opl_lt_pt(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'pt', 'lt', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
 
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_pt())
             await state.clear()
         else:
@@ -2124,7 +2460,13 @@ async def opl_lt_pt(msg: Message, state: FSMContext):
 async def opl_lt_pt(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, light, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -2133,16 +2475,17 @@ async def opl_lt_pt(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_lt(inn=inn, l_sch=l_sch, pok=data_summ.get('pok_lt'), summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -2162,7 +2505,13 @@ async def opl_gz_dm_pok(call: CallbackQuery, state: FSMContext):
 @router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gz_dm.pok_gz)
 async def opl_gz_dm_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_gz=msg.text)
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, gaz, schet, bik, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -2175,16 +2524,17 @@ async def opl_gz_dm_preparetion(msg: Message, state: FSMContext):
         bik = data[0][3]
         pok = data[0][4]
         summ = str(data[0][5])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     data_pokaz = await state.get_data()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gz(inn=inn, l_sch=l_sch, schet=schet, bik=bik, pok=data_pokaz.get('pok_gz'), summ=summ)
@@ -2217,21 +2567,28 @@ async def opl_gz_dm(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'dm', 'gz', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
 
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_dm())
             await state.clear()
         else:
@@ -2255,7 +2612,13 @@ async def opl_gz_dm(msg: Message, state: FSMContext):
 async def opl_gz_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, gaz, schet, bik FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -2266,16 +2629,17 @@ async def opl_gz_dm(msg: Message, state: FSMContext):
         l_sch = data[0][1]
         schet = data[0][2]
         bik = data[0][3]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gz(inn=inn, l_sch=l_sch, schet=schet, bik=bik, pok=data_summ.get('pok_gz'), summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -2295,7 +2659,13 @@ async def opl_gz_pt_pok(call: CallbackQuery, state: FSMContext):
 @router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gz_pt.pok_gz)
 async def opl_gz_pt_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_gz=msg.text)
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, gaz, schet, bik, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -2308,16 +2678,17 @@ async def opl_gz_pt_preparetion(msg: Message, state: FSMContext):
         bik = data[0][3]
         pok = data[0][4]
         summ = str(data[0][5])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     data_pokaz = await state.get_data()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gz(inn=inn, l_sch=l_sch, schet=schet, bik=bik, pok=data_pokaz.get('pok_gz'), summ=summ)
@@ -2350,21 +2721,28 @@ async def opl_gz_pt(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'pt', 'gz', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
 
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_pt())
             await state.clear()
         else:
@@ -2388,7 +2766,13 @@ async def opl_gz_pt(msg: Message, state: FSMContext):
 async def opl_gz_pt(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, gaz, schet, bik FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -2399,16 +2783,17 @@ async def opl_gz_pt(msg: Message, state: FSMContext):
         l_sch = data[0][1]
         schet = data[0][2]
         bik = data[0][3]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gz(inn=inn, l_sch=l_sch, schet=schet, bik=bik, pok=data_summ.get('pok_gz'), summ=data_summ.get('summ'))
     if input_value[0] is True:
@@ -2422,7 +2807,13 @@ async def opl_gz_pt(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gzfr')
 async def opl_gz_fr_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, gaz, schet, bik, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -2435,16 +2826,17 @@ async def opl_gz_fr_preparetion(call: CallbackQuery, state: FSMContext):
         bik = data[0][3]
         pok = data[0][4]
         summ = str(data[0][5])
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await call.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gz(inn=inn, l_sch=l_sch, schet=schet, bik=bik, pok=pok, summ=summ)
     if input_value[0] is True:
@@ -2475,20 +2867,27 @@ async def opl_gz_fr(msg: Message, state: FSMContext):
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
-            cursor = config_jkh.connection.cursor()
+            connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+            cursor = connection.cursor()
             try:
                 new_pay = (num, date_time_sql, usl, card, summ_sql, 'fr', 'gz', pokaz)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
-                config_jkh.connection.commit()
+                connection.commit()
                 print('Данные введены')
             except Exception as e:
                 # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-                config_jkh.connection.rollback()
+                connection.rollback()
                 print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
             finally:
                 # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
                 cursor.close()
+                connection.close()
             await msg.answer(chek, reply_markup=kb_jkh.opl_zkh_fr())
             await state.clear()
         else:
@@ -2512,7 +2911,13 @@ async def opl_gz_fr(msg: Message, state: FSMContext):
 async def opl_gz_fr(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
-    cursor = config_jkh.connection.cursor()
+    connection = con.connect(
+              host=config_jkh.con_sql[0],
+              user=config_jkh.con_sql[1],
+              password=config_jkh.con_sql[2],
+              database=config_jkh.con_sql[3]
+            )
+    cursor = connection.cursor()
     try:
         select = ''' SELECT inn, gaz, schet, bik, pokaz, price FROM flat_ls JOIN pokazania 
         ON flat_ls.kf = pokazania.kf JOIN postavshiki ON pokazania.kp = postavshiki.kp 
@@ -2524,16 +2929,17 @@ async def opl_gz_fr(msg: Message, state: FSMContext):
         schet = data[0][2]
         bik = data[0][3]
         pok = data[0][4]
-        config_jkh.connection.commit()
+        connection.commit()
         print('Данные получены')
     except Exception as e:
         # метод rollback, который отменяет все изменения, внесённые в текущей транзакции, возвращая базу данных в предыдущее состояние.
-        config_jkh.connection.rollback()
+        connection.rollback()
         print(f"Произошла ошибка: {str(e)} Транзакция откатывается.")
 
     finally:
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
+        connection.close()
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_gz(inn=inn, l_sch=l_sch, schet=schet, bik=bik, pok=pok, summ=data_summ.get('summ'))
     if input_value[0] is True:
