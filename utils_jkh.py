@@ -550,6 +550,8 @@ class SBOL:
         input_text(okno_2, kod[1])
         input_text(okno_3, kod[2])
         input_text(okno_4, kod[3])
+        time.sleep(3)
+        self.driver.save_screenshot("screenshot_tutorialspoint.png")
         if input_text(okno_5, kod[-1]):
             success_locator = (By.XPATH, '//*[@id="main"]/div/div/section[1]/div[3]/div[2]/div/div[2]/div/div/div/div[1]/a') 
             is_logged_in = check_login_success(self.driver, success_locator)
@@ -1038,7 +1040,11 @@ class SBOL:
                                                                 input_text(pok_lt_input, pok_lt)
                                                                 input_text(pok_cwt_input, pok_cwt)
                                                                 input_text(pok_hwt_input, pok_hwt)
-                                                                input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
+                                                                input_value = summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', '')
+                                                                if input_value.isdigit() is False:
+                                                                    input_value = 0
+                                                                else:
+                                                                    input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
                                                                 print(f'INPUT_VALUE = {input_value}')
                                                                 print(f'Тип данных summ - {summ} - {type(summ)}')
                                                                 if summ == '1.0':
@@ -1160,7 +1166,11 @@ class SBOL:
                                         if is_logged_in:
                                             print("Ввел лицевой счет")
                                             summ_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[4]/div/div/input')
-                                            input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
+                                            input_value = summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', '')
+                                            if input_value.isdigit() is False:
+                                                input_value = 0
+                                            else:
+                                                input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
                                             print(f'INPUT_VALUE = {input_value}')
                                             print(f'Тип данных summ - {summ} - {type(summ)}')
                                             if summ == '1.0':
