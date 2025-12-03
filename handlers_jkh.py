@@ -64,7 +64,7 @@ async def main_menu(call: CallbackQuery, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'main_menu_info')
 async def main_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    await call.message.answer('Главное меню', reply_markup=kb_jkh.start_kb())
+    await call.message.edit_text('Главное меню', reply_markup=kb_jkh.start_kb())
 
 ### Удаление сообщение из чата
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'clear_chat')
@@ -97,17 +97,17 @@ async def delete_msg(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_pay_rek')
 async def vibor_info(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    await call.message.answer(text_jkh.vibor_info, reply_markup=kb_jkh.vibor_info_rek_kb())
+    await call.message.edit_text(text_jkh.vibor_info, reply_markup=kb_jkh.vibor_info_rek_kb())
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_rek')
 async def vibor_info_rek(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    await call.message.answer('Выбери тип отчета о реквизитах', reply_markup=kb_jkh.vibor_info_post_lsch_kb())
+    await call.message.edit_text('Выбери тип отчета о реквизитах', reply_markup=kb_jkh.vibor_info_post_lsch_kb())
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_pay')
 async def vibor_info_pay(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    await call.message.answer('Выбери тип отчета о платежах', reply_markup=kb_jkh.vibor_info_pay())
+    await call.message.edit_text('Выбери тип отчета о платежах', reply_markup=kb_jkh.vibor_info_pay())
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_pos')
 async def vibor_rek_pos_info(call: CallbackQuery, state: FSMContext):
@@ -150,31 +150,31 @@ async def info_pay_mon(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_pay_kf_kp')
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    await call.message.answer('Выбери квартиру', reply_markup=kb_jkh.vibor_kv_info_kb())
+    await call.message.edit_text('Выбери квартиру', reply_markup=kb_jkh.vibor_kv_info_kb())
     await state.set_state(Info_pay_year.kf)
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'dm', Info_pay_year.kf)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kf='dm')
-    await call.message.answer('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
+    await call.message.edit_text('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
     await state.set_state(Info_pay_year.kp)
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'pt', Info_pay_year.kf)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kf='pt')
-    await call.message.answer('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
+    await call.message.edit_text('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
     await state.set_state(Info_pay_year.kp)
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'fr', Info_pay_year.kf)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kf='fr')
-    await call.message.answer('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
+    await call.message.edit_text('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
     await state.set_state(Info_pay_year.kp)
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'in', Info_pay_year.kf)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kf='in')
-    await call.message.answer('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
+    await call.message.edit_text('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
     await state.set_state(Info_pay_year.kp)
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gb', Info_pay_year.kp)
