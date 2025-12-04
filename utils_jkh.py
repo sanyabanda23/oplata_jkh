@@ -1069,7 +1069,7 @@ class SBOL:
                                                                 input_text(pok_cwt_input, pok_cwt)
                                                                 input_text(pok_hwt_input, pok_hwt)
                                                                 input_value = summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', '')
-                                                                if input_value.isdigit() is False:
+                                                                if len(input_value)==0:
                                                                     input_value = 0
                                                                 else:
                                                                     input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
@@ -1195,7 +1195,7 @@ class SBOL:
                                             print("Ввел лицевой счет")
                                             summ_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[4]/div/div/input')
                                             input_value = summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', '')
-                                            if input_value.isdigit() is False:
+                                            if len(input_value)==0:
                                                 input_value = 0
                                             else:
                                                 input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
@@ -1470,7 +1470,8 @@ class SBOL:
                                             pok_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[2]/div/div[1]/input')
                                             input_text(pok_input, pok)
                                             input_value = summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', '')
-                                            if input_value.isdigit() is False:
+                                            print(f'INPUT_VALUE = {input_value}')
+                                            if len(input_value)==0:
                                                 input_value = 0
                                             else:
                                                 input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
@@ -1629,7 +1630,7 @@ class SBOL:
                                                                 pok_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[5]/div/div[1]/input')
                                                                 input_text(pok_input, pok)
                                                                 input_value = summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', '')
-                                                                if input_value.isdigit() is False:
+                                                                if len(input_value)==0:
                                                                     input_value = 0
                                                                 else:
                                                                     input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
@@ -1655,7 +1656,7 @@ class SBOL:
                                                                     pok_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[6]/div/div[1]/input')
                                                                     input_text(pok_input, pok)
                                                                     input_value = summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', '')
-                                                                    if input_value.isdigit() is False:
+                                                                    if len(input_value)==0:
                                                                         input_value = 0
                                                                     else:
                                                                         input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
