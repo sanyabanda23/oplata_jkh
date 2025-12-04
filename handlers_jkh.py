@@ -2586,7 +2586,7 @@ async def opl_lt_pt(msg: Message, state: FSMContext):
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gzdm')
 async def opl_gz_dm_pok(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    await call.message.answer('Укажи показания счетчика воды.')
+    await call.message.answer('Укажи показания счетчика газа.')
     await state.set_state(Opl_gz_dm.pok_gz)
 
 @router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gz_dm.pok_gz)
