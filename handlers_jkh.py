@@ -30,9 +30,8 @@ async def start_vhod_sbol(call: CallbackQuery, state: FSMContext):
     await call.answer('Начата процедура входа')
     if driver_jkh.initialize_driver():
         driver_jkh.open_website(config_jkh.URL_vhod)
-        await call.message.answer('Введите пароль из СМС-сообщения')
+        await call.message.edit_text('Введите пароль из СМС-сообщения')
         if driver_jkh.vhod_tel_parol():
-            await call.message.edit_reply_markup(reply_markup=None)
             await state.set_state(Vhod.sms_pasword)
         else:
             driver_jkh.close_driver()
@@ -256,7 +255,7 @@ async def opl_zkh_dm(call: CallbackQuery, state: FSMContext):
     print('Данные получены')
     cursor.close()
     connection.close()
-    await call.message.answer(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_dm())
+    await call.message.edit_text(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_dm())
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'fr')
 async def opl_zkh_fr(call: CallbackQuery, state: FSMContext):
@@ -275,7 +274,7 @@ async def opl_zkh_fr(call: CallbackQuery, state: FSMContext):
     print('Данные получены')
     cursor.close()
     connection.close()
-    await call.message.answer(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_fr())
+    await call.message.edit_text(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_fr())
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'pt')
 async def opl_zkh_pt(call: CallbackQuery, state: FSMContext):
@@ -294,7 +293,7 @@ async def opl_zkh_pt(call: CallbackQuery, state: FSMContext):
     print('Данные получены')
     cursor.close()
     connection.close()
-    await call.message.answer(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_pt())
+    await call.message.edit_text(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_pt())
 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'in')
 async def opl_zkh_in(call: CallbackQuery, state: FSMContext):
@@ -313,14 +312,14 @@ async def opl_zkh_in(call: CallbackQuery, state: FSMContext):
     print('Данные получены')
     cursor.close()
     connection.close()
-    await call.message.answer(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_in())
+    await call.message.edit_text(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_in())
 
 ###### Реакция кнопок в клавиатуре оплата ЖКХ
 # Обратно для выбора квартиры 
 @router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'vibor_kv_menu')
 async def back_vibor_kv(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    await call.message.answer('Выбери квартиру для оплаты услуг ЖКХ', reply_markup=kb_jkh.vibor_kv_kb())
+    await call.message.edit_text('Выбери квартиру для оплаты услуг ЖКХ', reply_markup=kb_jkh.vibor_kv_kb())
 
 
 ### Оплата кап ремонт Петровская
@@ -374,13 +373,19 @@ async def opl_kr_pt(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -513,13 +518,19 @@ async def opl_kr_fr(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -652,13 +663,19 @@ async def opl_kr_in(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -791,13 +808,19 @@ async def opl_kr_dm(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -930,13 +953,19 @@ async def opl_gb_dm(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -1069,13 +1098,19 @@ async def opl_gb_in(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -1210,13 +1245,19 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -1350,13 +1391,19 @@ async def opl_yk_in(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -1519,15 +1566,19 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
             pokaz_lt = data_pokaz.get('pok_lt')
             pokaz_cwt = data_pokaz.get('pok_cwt')
             pokaz_hwt = data_pokaz.get('pok_hwt')
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика электричества</b> {pokaz_lt:>30} \n' \
-                   f'<b>Показания счетчика холодной воды</b> {pokaz_cwt:>30} \n' \
-                   f'<b>Показания счетчика горячей воды</b> {pokaz_hwt:>30} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -1675,13 +1726,19 @@ async def opl_wm_in(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -1823,13 +1880,19 @@ async def opl_wt_dm(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = data_pokaz.get('pok_wt')
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика воды</b> {pokaz:>30} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -1965,13 +2028,19 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -2106,13 +2175,19 @@ async def opl_wt_in(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -2255,13 +2330,19 @@ async def opl_lt_dm(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = data_pokaz.get('pok_lt')
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика воды</b> {pokaz:>30} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -2405,13 +2486,19 @@ async def opl_lt_pt(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = data_pokaz.get('pok_lt')
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика воды</b> {pokaz:>30} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -2557,13 +2644,19 @@ async def opl_gz_dm(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = data_pokaz.get('pok_gz')
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика воды</b> {pokaz:>30} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -2711,13 +2804,19 @@ async def opl_gz_pt(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = data_pokaz.get('pok_gz')
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика воды</b> {pokaz:>30} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
@@ -2857,13 +2956,19 @@ async def opl_gz_fr(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
-            chek = f'<b>**********************Чек по операции***********************</b>\n' \
-                   f'<b>Дата и время платежа</b> {date:>40}\n' \
-                   f'<b>Идентификатор платежа</b> {num:>38}\n' \
-                   f'<b>Вид услуги</b> {usl:>55}\n' \
-                   f'<b>Показания счетчика</b> {pokaz:>53} \n' \
-                   f'<b>Способ оплаты</b> {card:>49} \n' \
-                   f'<b>Сумма платежа</b> {summ:>61}'
+            chek = f'<b>************Чек по операции************</b>\n' \
+                   f'<b>Дата и время платежа</b>\n' \
+                   f'{date:>45}\n' \
+                   f'<b>Идентификатор платежа</b>\n' \
+                   f'{num:>45}\n' \
+                   f'<b>Вид услуги</b>\n' \
+                   f'{usl:>45}\n' \
+                   f'<b>Показания счетчика</b>\n' \
+                   f'{pokaz:>45}\n' \
+                   f'<b>Способ оплаты</b>\n' \
+                   f'{card:>45} \n' \
+                   f'<b>Сумма платежа</b>\n' \
+                   f'{summ:>45} руб.'
             date_time_sql = utils_jkh.form_date(date)
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
