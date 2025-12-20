@@ -2737,7 +2737,7 @@ async def opl_gz_dm(msg: Message, state: FSMContext):
     input_value = driver_jkh.oplata_gz(inn=inn, l_sch=l_sch, schet=schet, bik=bik, pok=data_summ.get('pok_gz'), summ=data_summ.get('summ'))
     if input_value[0] is True:
         await msg.answer(text_jkh.question_pay_gz.format(input_value[2], input_value[1]), reply_markup=kb_jkh.yes_no_kb)
-        await state.set_state(Opl_wt_dm.preparation)
+        await state.set_state(Opl_gz_dm.preparation)
     else:
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
         await state.clear()
