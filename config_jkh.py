@@ -2,6 +2,7 @@
 con_sql = ('127.0.0.1', 'sanyabanda23', 'Mashenka1!', 'pay_jkh')
 
 BOT_TOKEN = '8452662654:AAFwF6mapAm0wQY148pPFCpvMcJfqtE3K8A'
+BOT_TOKEN_VK = 'vk1.a.9lYzQSU9J_tnT6_Zp1itnAVNJ2j_mEvndFYT_rv0HWjB8nU6HP7G5uMiwPiunzShhBt1hPYpn8RiFYPIDH3SUsybe8JkswCOPDtATlZfkKC3dq1Pq6Ucvm3mLoH70_VL6GitYV53CKvdC1sKhfY0ObpF70kBkdpXhr102JFY0fJ47iHUaXXSYy3Io5PKgP-n2tRhKbkWCMdoIJH3O7ukug'
 REDIS_URL = 'redis://127.0.0.1:6379/0'
 tg_user_id = 5180149646
 
