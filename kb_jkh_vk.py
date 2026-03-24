@@ -3,7 +3,7 @@ from vkbottle import Keyboard, Text, OpenLink
 
 def start_kb():
     keyboard = (
-        Keyboard(one_time=False, inline=False)
+        Keyboard(one_time=False, inline=True)
         .add(Text("✅Войти в Сбербанк Онлайн", payload={"cmd": "start_sbol"}))
         .row()
         .add(Text("❌Очистить чат", payload={"cmd": "clear_chat"}))
