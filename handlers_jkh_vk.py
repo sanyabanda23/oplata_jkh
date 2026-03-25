@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 from vkbottle.framework.labeler import BotLabeler
 from vkbottle.bot import Message
@@ -23,6 +24,23 @@ class MyRule(ABCRule[Message]):
             return True
         return False
 
+# Функция для хендлера payload. Аналог callback 
+class PayloadABCRule(ABCRule[Message]):
+    async def check(self, message: Message) -> bool:
+        payload = message.payload
+        if not payload:
+            return False
+        
+        # Проверяем, что payload - это JSON
+        if isinstance(payload, dict):
+            cmd_value = payload.get("cmd")
+            return cmd_value == self.cmd if cmd_value else False
+        else:
+            return False
+
+    def __init__(self, cmd: str):
+        self.cmd = cmd
+    
 @router_vk.message(MyRule(), text="/start")
 async def start_handler(message: Message):
     try:
@@ -31,6 +49,3 @@ async def start_handler(message: Message):
         pass  # Состояние не найдено — игнорируем
     await message.answer(text_jkh.hello_text, keyboard=kb_jkh_vk.start_kb())
 
-@router_vk.message(MyRule())
-async def echo_handler(message: Message):
-    await message.answer(f"Вы написали: {message.text} в чат {message.chat_id}, {message.from_id}, {message.peer_id}")
