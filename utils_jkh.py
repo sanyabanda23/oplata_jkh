@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import mysql.connector as con
 
-import config_jkh
+from config_jkh import settings
 
 
 # Инициализирует и возвращает экземпляр Chrome WebDriver.
@@ -224,11 +224,11 @@ def vhod_tel_parol(driver: webdriver.Chrome):
             print("Перешел на страницу")
             login_input = find_element(driver, By.XPATH, '//*[@id="layout-content"]/div[2]/form/div[1]/div/input')
             if login_input:
-                for i in config_jkh.login_telefon:
+                for i in settings.login_telefon:
                     login_input.send_keys(i)
             pasword_input = find_element(driver, By.XPATH, '//*[@id="layout-content"]/div[2]/form/div[2]/div/input')
             if pasword_input:
-                input_text(pasword_input, config_jkh.pasword_text)
+                input_text(pasword_input, settings.pasword_text)
             button_poluch_sms = find_element(driver, By.XPATH, '//*[@id="layout-content"]/div[2]/form/div[4]/button')
             if click_element(button_poluch_sms):
                 success_locator = (By.XPATH, '//*[@id="layout-content"]/form/div[1]/div/div/input[1]') 
@@ -248,7 +248,7 @@ def vhod_po_bank_card(driver: webdriver.Chrome):
             print("Перешел на страницу")
             login_input = find_element(driver, By.XPATH, '//*[@id="layout-content"]/div[2]/form/div[1]/div[1]/input')                                                
             if login_input:
-                for i in config_jkh.bank_card:
+                for i in settings.bank_card:
                     login_input.send_keys(i)
             button_poluch_sms = find_element(driver, By.XPATH, '//*[@id="layout-content"]/div[2]/form/div[2]/button')
             if click_element(button_poluch_sms):
@@ -263,7 +263,7 @@ def vhod_po_bank_card(driver: webdriver.Chrome):
 
 def vhod_v_sbol(driver: webdriver.Chrome) -> bool:
         if  driver:
-            open_website(driver, config_jkh.URL_vhod)
+            open_website(driver, settings.URL_vhod)
             if vhod_tel_parol(driver):
                 print('Переход для получения СМС выполнен')
                 return True
@@ -317,10 +317,10 @@ def get_info_from_chek() -> list:
 def select_from_postav():
     try:
         connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
         cursor = connection.cursor()
         # sql запрос
@@ -357,10 +357,10 @@ def select_from_postav():
 def select_from_lsch():
     try:
         connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
         cursor = connection.cursor()
         # sql запрос
@@ -397,10 +397,10 @@ def select_from_lsch():
 def select_from_pay_month(month):
     try:
         connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
         cursor = connection.cursor()
         # sql запрос
@@ -445,10 +445,10 @@ def select_from_pay_month(month):
 def select_from_pay_year(kf, kp, year):
     try:
         connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
         cursor = connection.cursor()
         # sql запрос
@@ -546,11 +546,11 @@ class SBOL:
                 print("Перешел на страницу")
                 login_input = find_element(self.driver, By.XPATH, '//*[@id="layout-content"]/div[2]/form/div[1]/div/input')
                 if login_input:
-                    for i in config_jkh.login_telefon:
+                    for i in settings.login_telefon:
                         login_input.send_keys(i)
                 pasword_input = find_element(self.driver, By.XPATH, '//*[@id="layout-content"]/div[2]/form/div[2]/div/input')
                 if pasword_input:
-                    input_text(pasword_input, config_jkh.pasword_text)
+                    input_text(pasword_input, settings.pasword_text)
                 button_poluch_sms = find_element(self.driver, By.XPATH, '//*[@id="layout-content"]/div[2]/form/div[4]/button')
                 if click_element(button_poluch_sms):
                     success_locator = (By.XPATH, '//*[@id="layout-content"]/form/div[1]/div/div/input[1]') 
@@ -597,9 +597,9 @@ class SBOL:
     def oplata_kr(self, inn: str, l_sch: str, summ: str):
         if 'oplata_kr' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_kr')
-            open_website(config_jkh.URL_payments)
+            open_website(settings.URL_payments)
         else: 
-            open_tab(self.driver, config_jkh.URL_payments, 'oplata_kr')
+            open_tab(self.driver, settings.URL_payments, 'oplata_kr')
         self.driver.set_window_size(1920, 1080)
         success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
         is_logged_in = check_login_success(self.driver, success_locator)
@@ -608,9 +608,9 @@ class SBOL:
         else:
             if 'oplata_kr' in self.driver.window_handles:
                 self.driver.switch_to.window('oplata_kr')
-                open_website(config_jkh.URL_payments_2)
+                open_website(settings.URL_payments_2)
             else: 
-                open_tab(self.driver, config_jkh.URL_payments_2, 'oplata_kr')
+                open_tab(self.driver, settings.URL_payments_2, 'oplata_kr')
                 self.driver.set_window_size(1920, 1080)
                 success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
                 is_logged_in = check_login_success(self.driver, success_locator)
@@ -700,9 +700,9 @@ class SBOL:
     def oplata_gb(self, inn: str, l_sch: str, summ: str):
         if 'oplata_gb' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_gb')
-            open_website(config_jkh.URL_payments)
+            open_website(settings.URL_payments)
         else: 
-            open_tab(self.driver, config_jkh.URL_payments, 'oplata_gb')
+            open_tab(self.driver, settings.URL_payments, 'oplata_gb')
         self.driver.set_window_size(1920, 1080)
         success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
         is_logged_in = check_login_success(self.driver, success_locator)
@@ -711,9 +711,9 @@ class SBOL:
         else:
             if 'oplata_gb' in self.driver.window_handles:
                 self.driver.switch_to.window('oplata_gb')
-                open_website(config_jkh.URL_payments_2)
+                open_website(settings.URL_payments_2)
             else: 
-                open_tab(self.driver, config_jkh.URL_payments_2, 'oplata_gb')
+                open_tab(self.driver, settings.URL_payments_2, 'oplata_gb')
                 self.driver.set_window_size(1920, 1080)
                 success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
                 is_logged_in = check_login_success(self.driver, success_locator)
@@ -803,9 +803,9 @@ class SBOL:
     def oplata_yk_dm(self, inn: str, l_sch: str, schet: str, bik: str, summ: str):
         if 'oplata_yk' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_yk')
-            open_website(config_jkh.URL_payments)
+            open_website(settings.URL_payments)
         else: 
-            open_tab(self.driver, config_jkh.URL_payments, 'oplata_yk')
+            open_tab(self.driver, settings.URL_payments, 'oplata_yk')
         self.driver.set_window_size(1920, 1080)
         success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
         is_logged_in = check_login_success(self.driver, success_locator)
@@ -814,9 +814,9 @@ class SBOL:
         else:
             if 'oplata_yk' in self.driver.window_handles:
                 self.driver.switch_to.window('oplata_yk')
-                open_website(config_jkh.URL_payments_2)
+                open_website(settings.URL_payments_2)
             else: 
-                open_tab(self.driver, config_jkh.URL_payments_2, 'oplata_yk')
+                open_tab(self.driver, settings.URL_payments_2, 'oplata_yk')
                 self.driver.set_window_size(1920, 1080)
                 success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
                 is_logged_in = check_login_success(self.driver, success_locator)
@@ -924,9 +924,9 @@ class SBOL:
     def oplata_yk_in(self, l_sch: str, summ: str):
         if 'oplata_yk' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_yk')
-            open_website(config_jkh.URL_payments_yki)
+            open_website(settings.URL_payments_yki)
         else: 
-            open_tab(self.driver, config_jkh.URL_payments_yki, 'oplata_yk')
+            open_tab(self.driver, settings.URL_payments_yki, 'oplata_yk')
         self.driver.set_window_size(1920, 1080)
         success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[1]/div/div[1]/input') 
         is_logged_in = check_login_success(self.driver, success_locator)
@@ -935,9 +935,9 @@ class SBOL:
         else:
             if 'oplata_yk' in self.driver.window_handles:
                 self.driver.switch_to.window('oplata_yk')
-                open_website(config_jkh.URL_payments_yki_2)
+                open_website(settings.URL_payments_yki_2)
             else: 
-                open_tab(self.driver, config_jkh.URL_payments_yki_2, 'oplata_yk')
+                open_tab(self.driver, settings.URL_payments_yki_2, 'oplata_yk')
                 self.driver.set_window_size(1920, 1080)
                 success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[1]/div/div[1]/input') 
                 is_logged_in = check_login_success(self.driver, success_locator)
@@ -1001,9 +1001,9 @@ class SBOL:
     def oplata_yk_fr(self, inn: str, l_sch: str, schet: str, bik: str, pok_lt: str, pok_cwt: str, pok_hwt: str, summ: str):
         if 'oplata_yk' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_yk')
-            open_website(config_jkh.URL_payments)
+            open_website(settings.URL_payments)
         else: 
-            open_tab(self.driver, config_jkh.URL_payments, 'oplata_yk')
+            open_tab(self.driver, settings.URL_payments, 'oplata_yk')
         self.driver.set_window_size(1920, 1080)
         success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
         is_logged_in = check_login_success(self.driver, success_locator)
@@ -1012,9 +1012,9 @@ class SBOL:
         else:
             if 'oplata_yk' in self.driver.window_handles:
                 self.driver.switch_to.window('oplata_yk')
-                open_website(config_jkh.URL_payments_2)
+                open_website(settings.URL_payments_2)
             else: 
-                open_tab(self.driver, config_jkh.URL_payments_2, 'oplata_yk')
+                open_tab(self.driver, settings.URL_payments_2, 'oplata_yk')
                 self.driver.set_window_size(1920, 1080)
                 success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
                 is_logged_in = check_login_success(self.driver, success_locator)
@@ -1149,9 +1149,9 @@ class SBOL:
     def oplata_wm(self, inn: str, l_sch: str, summ: str):
         if 'oplata_wm' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_wm')
-            open_website(config_jkh.URL_payments)
+            open_website(settings.URL_payments)
         else: 
-            open_tab(self.driver, config_jkh.URL_payments, 'oplata_wm')
+            open_tab(self.driver, settings.URL_payments, 'oplata_wm')
         self.driver.set_window_size(1920, 1080)
         success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
         is_logged_in = check_login_success(self.driver, success_locator)
@@ -1160,9 +1160,9 @@ class SBOL:
         else:
             if 'oplata_wm' in self.driver.window_handles:
                 self.driver.switch_to.window('oplata_wm')
-                open_website(config_jkh.URL_payments_2)
+                open_website(settings.URL_payments_2)
             else: 
-                open_tab(self.driver, config_jkh.URL_payments_2, 'oplata_wm')
+                open_tab(self.driver, settings.URL_payments_2, 'oplata_wm')
                 self.driver.set_window_size(1920, 1080)
                 success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
                 is_logged_in = check_login_success(self.driver, success_locator)
@@ -1264,9 +1264,9 @@ class SBOL:
     def oplata_wt(self, inn: str, l_sch: str, pok: str, summ: str):
         if 'oplata_wt' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_wt')
-            open_website(config_jkh.URL_payments)
+            open_website(settings.URL_payments)
         else: 
-            open_tab(self.driver, config_jkh.URL_payments, 'oplata_wt')
+            open_tab(self.driver, settings.URL_payments, 'oplata_wt')
         self.driver.set_window_size(1920, 1080)
         success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
         is_logged_in = check_login_success(self.driver, success_locator)
@@ -1275,9 +1275,9 @@ class SBOL:
         else:
             if 'oplata_wt' in self.driver.window_handles:
                 self.driver.switch_to.window('oplata_wt')
-                open_website(config_jkh.URL_payments_2)
+                open_website(settings.URL_payments_2)
             else: 
-                open_tab(self.driver, config_jkh.URL_payments_2, 'oplata_wt')
+                open_tab(self.driver, settings.URL_payments_2, 'oplata_wt')
                 self.driver.set_window_size(1920, 1080)
                 success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
                 is_logged_in = check_login_success(self.driver, success_locator)
@@ -1437,9 +1437,9 @@ class SBOL:
     def oplata_lt(self, inn: str, l_sch: str, pok: str, summ: str):
         if 'oplata_lt' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_lt')
-            open_website(config_jkh.URL_payments)
+            open_website(settings.URL_payments)
         else: 
-            open_tab(self.driver, config_jkh.URL_payments, 'oplata_lt')
+            open_tab(self.driver, settings.URL_payments, 'oplata_lt')
         self.driver.set_window_size(1920, 1080)
         success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
         is_logged_in = check_login_success(self.driver, success_locator)
@@ -1448,9 +1448,9 @@ class SBOL:
         else:
             if 'oplata_lt' in self.driver.window_handles:
                 self.driver.switch_to.window('oplata_lt')
-                open_website(config_jkh.URL_payments_2)
+                open_website(settings.URL_payments_2)
             else: 
-                open_tab(self.driver, config_jkh.URL_payments_2, 'oplata_lt')
+                open_tab(self.driver, settings.URL_payments_2, 'oplata_lt')
                 self.driver.set_window_size(1920, 1080)
                 success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
                 is_logged_in = check_login_success(self.driver, success_locator)
@@ -1557,9 +1557,9 @@ class SBOL:
     def oplata_gz(self, inn: str, l_sch: str, schet: str, bik: str, pok: str, summ: str):
         if 'oplata_gz' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_gz')
-            open_website(config_jkh.URL_payments)
+            open_website(settings.URL_payments)
         else: 
-            open_tab(self.driver, config_jkh.URL_payments, 'oplata_gz')
+            open_tab(self.driver, settings.URL_payments, 'oplata_gz')
         self.driver.set_window_size(1920, 1080)
         success_locator = (By.XPATH, '//*[@id="text-field-1"]')
         is_logged_in = check_login_success(self.driver, success_locator)
@@ -1568,9 +1568,9 @@ class SBOL:
         else:
             if 'oplata_gz' in self.driver.window_handles:
                 self.driver.switch_to.window('oplata_gz')
-                open_website(config_jkh.URL_payments_2)
+                open_website(settings.URL_payments_2)
             else: 
-                open_tab(self.driver, config_jkh.URL_payments_2, 'oplata_gz')
+                open_tab(self.driver, settings.URL_payments_2, 'oplata_gz')
                 self.driver.set_window_size(1920, 1080)
                 success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
                 is_logged_in = check_login_success(self.driver, success_locator)

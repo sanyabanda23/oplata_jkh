@@ -8,7 +8,8 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types.input_file import FSInputFile
 import mysql.connector as con
 
-import kb_jkh, config_jkh, utils_jkh, text_jkh
+import kb_jkh, utils_jkh, text_jkh
+from config_jkh import settings
 from state_jkh import Vhod, Clear, Opl_kr_pt, Opl_kr_fr, Opl_kr_in, Opl_kr_dm
 from state_jkh import Opl_gb_dm, Opl_gb_in, Opl_yk_dm, Opl_yk_in, Opl_yk_fr
 from state_jkh import Opl_wm_in, Opl_wt_dm, Opl_wt_pt, Opl_wt_in, Opl_lt_dm
@@ -18,18 +19,18 @@ router_jkh = Router()
 driver_jkh = utils_jkh.SBOL()
 from main_jkh import bot as b
 # выполнение команды старт
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, CommandStart())
+@router_jkh.message(F.from_user.id == settings.tg_user_id, CommandStart())
 async def start_handler(msg: Message, state: FSMContext):
     await state.clear() # завершение сценарии, которые не довели до конца (используй во всех коммандах!!!)
     await msg.answer(text_jkh.hello_text, reply_markup=kb_jkh.start_kb())
 
 ### Вход в Сбербанк оннлайнн
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'start_sbol')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'start_sbol')
 async def start_vhod_sbol(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.answer('Начата процедура входа')
     if driver_jkh.initialize_driver():
-        driver_jkh.open_website(config_jkh.URL_vhod)
+        driver_jkh.open_website(settings.URL_vhod)
         await call.message.edit_text('Введите пароль из СМС-сообщения')
         if driver_jkh.vhod_tel_parol():
             await state.set_state(Vhod.sms_pasword)
@@ -37,7 +38,7 @@ async def start_vhod_sbol(call: CallbackQuery, state: FSMContext):
             driver_jkh.close_driver()
             await call.message.answer(text_jkh.falling_vhod, reply_markup=kb_jkh.start_kb())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Vhod.sms_pasword)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Vhod.sms_pasword)
 async def input_sms(msg: Message, state: FSMContext):
     await state.update_data(sms_pasword=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -54,25 +55,25 @@ async def input_sms(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_vhod, reply_markup=kb_jkh.start_kb())
 
 ### Реакция на кнопку гравное меню
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'main_menu')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'main_menu')
 async def main_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
     driver_jkh.quit_driver()
     await call.message.answer('Главное меню', reply_markup=kb_jkh.start_kb())
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'main_menu_info')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'main_menu_info')
 async def main_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.edit_text('Главное меню', reply_markup=kb_jkh.start_kb())
 
 ### Удаление сообщение из чата
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'clear_chat')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'clear_chat')
 async def cmd_clear(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.answer('Удалить сообщения из чата?', reply_markup=kb_jkh.yes_no_kb)
     await state.set_state(Clear.delete)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Clear.delete)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Clear.delete)
 async def delete_msg(msg: Message, state: FSMContext):
     await state.update_data(delete=msg.text)
     try:  
@@ -87,28 +88,28 @@ async def delete_msg(msg: Message, state: FSMContext):
             await state.clear()  
             print("Все сообщения удалены")
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Clear.delete)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Clear.delete)
 async def delete_msg(msg: Message, state: FSMContext):
     await msg.edit_reply_markup(reply_markup=None)
     await state.clear()
 
 ### Формирование отчетов
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_pay_rek')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'info_pay_rek')
 async def vibor_info(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.edit_text(text_jkh.vibor_info, reply_markup=kb_jkh.vibor_info_rek_kb())
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_rek')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'info_rek')
 async def vibor_info_rek(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.edit_text('Выбери тип отчета о реквизитах', reply_markup=kb_jkh.vibor_info_post_lsch_kb())
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_pay')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'info_pay')
 async def vibor_info_pay(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.edit_text('Выбери тип отчета о платежах', reply_markup=kb_jkh.vibor_info_pay())
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_pos')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'info_pos')
 async def vibor_rek_pos_info(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.answer('Отчет формируется')
@@ -118,7 +119,7 @@ async def vibor_rek_pos_info(call: CallbackQuery, state: FSMContext):
     await b.send_document(call.message.chat.id, document=doc)  
     await call.message.answer('Отправляю вам отчет в формате PDF')
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_lsch')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'info_lsch')
 async def vibor_rek_lsch_info(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.answer('Отчет формируется')
@@ -128,13 +129,13 @@ async def vibor_rek_lsch_info(call: CallbackQuery, state: FSMContext):
     await b.send_document(call.message.chat.id, document=doc)  
     await call.message.answer('Отправляю вам отчет в формате PDF')
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_pay_mon')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'info_pay_mon')
 async def info_pay_mon(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.answer(text_jkh.info_pay_mon)
     await state.set_state(Info_pay_mon.mon)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Info_pay_mon.mon)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Info_pay_mon.mon)
 async def info_pay_mon(msg: Message, state: FSMContext):        
     await state.update_data(mon=msg.text)
     data_mon = await state.get_data()
@@ -146,85 +147,85 @@ async def info_pay_mon(msg: Message, state: FSMContext):
     await msg.answer('Отправляю вам отчет в формате PDF')
     await state.clear()
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'info_pay_kf_kp')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'info_pay_kf_kp')
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.edit_text('Выбери квартиру', reply_markup=kb_jkh.vibor_kv_info_kb())
     await state.set_state(Info_pay_year.kf)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'dm', Info_pay_year.kf)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'dm', Info_pay_year.kf)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kf='dm')
     await call.message.edit_text('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
     await state.set_state(Info_pay_year.kp)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'pt', Info_pay_year.kf)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'pt', Info_pay_year.kf)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kf='pt')
     await call.message.edit_text('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
     await state.set_state(Info_pay_year.kp)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'fr', Info_pay_year.kf)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'fr', Info_pay_year.kf)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kf='fr')
     await call.message.edit_text('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
     await state.set_state(Info_pay_year.kp)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'in', Info_pay_year.kf)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'in', Info_pay_year.kf)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kf='in')
     await call.message.edit_text('Выбери поставщика', reply_markup=kb_jkh.vibor_post_info_kb())
     await state.set_state(Info_pay_year.kp)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gb', Info_pay_year.kp)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'gb', Info_pay_year.kp)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kp='gb')
     await call.message.answer(text_jkh.info_pay_year)
     await state.set_state(Info_pay_year.year)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gz', Info_pay_year.kp)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'gz', Info_pay_year.kp)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kp='gz')
     await call.message.answer(text_jkh.info_pay_year)
     await state.set_state(Info_pay_year.year)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'kr', Info_pay_year.kp)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'kr', Info_pay_year.kp)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kp='kr')
     await call.message.answer(text_jkh.info_pay_year)
     await state.set_state(Info_pay_year.year)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'lt', Info_pay_year.kp)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'lt', Info_pay_year.kp)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kp='lt')
     await call.message.answer(text_jkh.info_pay_year)
     await state.set_state(Info_pay_year.year)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'wm', Info_pay_year.kp)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'wm', Info_pay_year.kp)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kp='wm')
     await call.message.answer(text_jkh.info_pay_year)
     await state.set_state(Info_pay_year.year)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'ykd', Info_pay_year.kp)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'ykd', Info_pay_year.kp)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kp='ykd')
     await call.message.answer(text_jkh.info_pay_year)
     await state.set_state(Info_pay_year.year)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'ykf', Info_pay_year.kp)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'ykf', Info_pay_year.kp)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kp='ykf')
     await call.message.answer(text_jkh.info_pay_year)
     await state.set_state(Info_pay_year.year)
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'yki', Info_pay_year.kp)
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'yki', Info_pay_year.kp)
 async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await state.update_data(kp='yki')
     await call.message.answer(text_jkh.info_pay_year)
     await state.set_state(Info_pay_year.year)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Info_pay_year.year)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Info_pay_year.year)
 async def info_pay_year(msg: Message, state: FSMContext):        
     await state.update_data(year=msg.text)
     data = await state.get_data()
@@ -238,14 +239,14 @@ async def info_pay_year(msg: Message, state: FSMContext):
 
 
 ### Реакция на кнопки в клавиатуре выбор квартиры
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'dm')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'dm')
 async def opl_zkh_dm(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-      host=config_jkh.con_sql[0],
-      user=config_jkh.con_sql[1],
-      password=config_jkh.con_sql[2],
-      database=config_jkh.con_sql[3]
+      host=settings.con_sql[0],
+      user=settings.con_sql[1],
+      password=settings.con_sql[2],
+      database=settings.con_sql[3]
     )
     cursor = connection.cursor()
     select = ''' SELECT name FROM flat_ls WHERE kf = 'dm' '''
@@ -257,14 +258,14 @@ async def opl_zkh_dm(call: CallbackQuery, state: FSMContext):
     connection.close()
     await call.message.edit_text(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_dm())
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'fr')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'fr')
 async def opl_zkh_fr(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-      host=config_jkh.con_sql[0],
-      user=config_jkh.con_sql[1],
-      password=config_jkh.con_sql[2],
-      database=config_jkh.con_sql[3]
+      host=settings.con_sql[0],
+      user=settings.con_sql[1],
+      password=settings.con_sql[2],
+      database=settings.con_sql[3]
     )
     cursor = connection.cursor()
     select = ''' SELECT name FROM flat_ls WHERE kf = 'fr' '''
@@ -276,14 +277,14 @@ async def opl_zkh_fr(call: CallbackQuery, state: FSMContext):
     connection.close()
     await call.message.edit_text(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_fr())
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'pt')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'pt')
 async def opl_zkh_pt(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-      host=config_jkh.con_sql[0],
-      user=config_jkh.con_sql[1],
-      password=config_jkh.con_sql[2],
-      database=config_jkh.con_sql[3]
+      host=settings.con_sql[0],
+      user=settings.con_sql[1],
+      password=settings.con_sql[2],
+      database=settings.con_sql[3]
     )
     cursor = connection.cursor()
     select = ''' SELECT name FROM flat_ls WHERE kf = 'pt' '''
@@ -295,14 +296,14 @@ async def opl_zkh_pt(call: CallbackQuery, state: FSMContext):
     connection.close()
     await call.message.edit_text(text_jkh.oplata_za.format(data[0][0]), reply_markup=kb_jkh.opl_zkh_pt())
 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'in')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'in')
 async def opl_zkh_in(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-      host=config_jkh.con_sql[0],
-      user=config_jkh.con_sql[1],
-      password=config_jkh.con_sql[2],
-      database=config_jkh.con_sql[3]
+      host=settings.con_sql[0],
+      user=settings.con_sql[1],
+      password=settings.con_sql[2],
+      database=settings.con_sql[3]
     )
     cursor = connection.cursor()
     select = ''' SELECT name FROM flat_ls WHERE kf = 'in' '''
@@ -316,21 +317,21 @@ async def opl_zkh_in(call: CallbackQuery, state: FSMContext):
 
 ###### Реакция кнопок в клавиатуре оплата ЖКХ
 # Обратно для выбора квартиры 
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'vibor_kv_menu')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'vibor_kv_menu')
 async def back_vibor_kv(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.edit_text('Выбери квартиру для оплаты услуг ЖКХ', reply_markup=kb_jkh.vibor_kv_kb())
 
 
 ### Оплата кап ремонт Петровская
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'krpt')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'krpt')
 async def opl_kr_pt_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-      host=config_jkh.con_sql[0],
-      user=config_jkh.con_sql[1],
-      password=config_jkh.con_sql[2],
-      database=config_jkh.con_sql[3]
+      host=settings.con_sql[0],
+      user=settings.con_sql[1],
+      password=settings.con_sql[2],
+      database=settings.con_sql[3]
     )
     cursor = connection.cursor()
     try:
@@ -361,7 +362,7 @@ async def opl_kr_pt_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_kr_pt.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_kr_pt.preparation)
 async def opl_kr_pt(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_kr_yes():    
@@ -390,10 +391,10 @@ async def opl_kr_pt(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -420,7 +421,7 @@ async def opl_kr_pt(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_kr_pt.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_kr_pt.preparation)
 async def opl_kr_pt(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -429,15 +430,15 @@ async def opl_kr_pt(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_kr_pt.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_kr_pt.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_kr_pt.summ)
 async def opl_kr_pt(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -468,14 +469,14 @@ async def opl_kr_pt(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
 
 # Оплата кап ремонт Фрунзе
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'krfr')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'krfr')
 async def opl_kr_fr_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -506,7 +507,7 @@ async def opl_kr_fr_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_fr())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_kr_fr.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_kr_fr.preparation)
 async def opl_kr_fr(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_kr_yes():    
@@ -535,10 +536,10 @@ async def opl_kr_fr(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -565,7 +566,7 @@ async def opl_kr_fr(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_fr())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_kr_fr.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_kr_fr.preparation)
 async def opl_kr_fr(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -574,15 +575,15 @@ async def opl_kr_fr(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_kr_fr.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_kr_fr.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_kr_fr.summ)
 async def opl_kr_fr(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -613,14 +614,14 @@ async def opl_kr_fr(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_fr())
 
 # Оплата кап ремонт Инструментальная
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'krin')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'krin')
 async def opl_kr_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -651,7 +652,7 @@ async def opl_kr_in_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_kr_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_kr_in.preparation)
 async def opl_kr_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_kr_yes():    
@@ -680,10 +681,10 @@ async def opl_kr_in(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -710,7 +711,7 @@ async def opl_kr_in(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_kr_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_kr_in.preparation)
 async def opl_kr_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -719,15 +720,15 @@ async def opl_kr_in(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_kr_in.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_kr_in.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_kr_in.summ)
 async def opl_kr_in(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -758,14 +759,14 @@ async def opl_kr_in(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
 # Оплата кап ремонт Дом
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'krdm')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'krdm')
 async def opl_kr_dm_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -796,7 +797,7 @@ async def opl_kr_dm_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_kr_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_kr_dm.preparation)
 async def opl_kr_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_kr_yes():    
@@ -825,10 +826,10 @@ async def opl_kr_dm(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -855,7 +856,7 @@ async def opl_kr_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_kr_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_kr_dm.preparation)
 async def opl_kr_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -864,15 +865,15 @@ async def opl_kr_dm(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_kr_dm.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_kr_dm.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_kr_dm.summ)
 async def opl_kr_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -903,14 +904,14 @@ async def opl_kr_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
 
 ### Оплата вывоз ТКО Дом
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gbdm')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'gbdm')
 async def opl_gb_dm_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -941,7 +942,7 @@ async def opl_gb_dm_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_gb_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_gb_dm.preparation)
 async def opl_gb_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_gb_yes():    
@@ -970,10 +971,10 @@ async def opl_gb_dm(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -1000,7 +1001,7 @@ async def opl_gb_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_gb_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_gb_dm.preparation)
 async def opl_gb_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -1009,15 +1010,15 @@ async def opl_gb_dm(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_gb_dm.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gb_dm.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_gb_dm.summ)
 async def opl_gb_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1048,14 +1049,14 @@ async def opl_gb_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
 
 ### Оплата вывоз ТКО Инструментальная
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gbin')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'gbin')
 async def opl_gb_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1086,7 +1087,7 @@ async def opl_gb_in_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_gb_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_gb_in.preparation)
 async def opl_gb_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_gb_yes():    
@@ -1115,10 +1116,10 @@ async def opl_gb_in(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -1145,7 +1146,7 @@ async def opl_gb_in(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_gb_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_gb_in.preparation)
 async def opl_gb_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -1154,15 +1155,15 @@ async def opl_gb_in(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_gb_in.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gb_in.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_gb_in.summ)
 async def opl_gb_in(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1193,14 +1194,14 @@ async def opl_gb_in(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
 ### Оплата УК дом
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'ykdm')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'ykdm')
 async def opl_yk_dm_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1233,7 +1234,7 @@ async def opl_yk_dm_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_yk_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_yk_dm.preparation)
 async def opl_yk_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_yk_dm_yes():    
@@ -1262,10 +1263,10 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -1292,7 +1293,7 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_yk_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_yk_dm.preparation)
 async def opl_yk_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -1301,15 +1302,15 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_yk_dm.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_yk_dm.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_yk_dm.summ)
 async def opl_yk_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1342,14 +1343,14 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
 
 ### Оплата УК Инструментальная
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'ykin')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'ykin')
 async def opl_yk_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1379,7 +1380,7 @@ async def opl_yk_in_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_yk_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_yk_in.preparation)
 async def opl_yk_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_yk_in_yes():    
@@ -1408,10 +1409,10 @@ async def opl_yk_in(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -1438,7 +1439,7 @@ async def opl_yk_in(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_yk_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_yk_in.preparation)
 async def opl_yk_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -1447,15 +1448,15 @@ async def opl_yk_in(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_yk_in.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_yk_in.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_yk_in.summ)
 async def opl_yk_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1485,13 +1486,13 @@ async def opl_yk_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
 ### Оплата УК Фрунзе
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'ykfr')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'ykfr')
 async def opl_yk_fr_pok_lt(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.answer('Укажи показания счетчика электроэнергии.')
     await state.set_state(Opl_yk_fr.pok_lt)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_yk_fr.pok_lt)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_yk_fr.pok_lt)
 async def opl_yk_fr_cwt(msg: Message, state: FSMContext):        
     await state.update_data(pok_lt=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -1500,7 +1501,7 @@ async def opl_yk_fr_cwt(msg: Message, state: FSMContext):
         await msg.answer('Укажи показания счетчика холодной воды.')
     await state.set_state(Opl_yk_fr.pok_cwt)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_yk_fr.pok_cwt)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_yk_fr.pok_cwt)
 async def opl_yk_fr_hwt(msg: Message, state: FSMContext):        
     await state.update_data(pok_cwt=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -1509,14 +1510,14 @@ async def opl_yk_fr_hwt(msg: Message, state: FSMContext):
         await msg.answer('Укажи показания счетчика горячей воды.')
     await state.set_state(Opl_yk_fr.pok_hwt)    
     
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_yk_fr.pok_hwt)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_yk_fr.pok_hwt)
 async def opl_yk_fr_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_hwt=msg.text)
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1550,7 +1551,7 @@ async def opl_yk_fr_preparetion(msg: Message, state: FSMContext):
     else:
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_fr())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_yk_fr.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_yk_fr.preparation)
 async def opl_yk_fr(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_yk_fr_yes():    
@@ -1583,10 +1584,10 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -1625,7 +1626,7 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_fr())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_yk_fr.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_yk_fr.preparation)
 async def opl_yk_fr(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -1634,15 +1635,15 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_yk_fr.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_yk_fr.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_yk_fr.summ)
 async def opl_yk_fr(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1676,14 +1677,14 @@ async def opl_yk_fr(msg: Message, state: FSMContext):
         await state.clear()
 
 # Оплата теплоэнерго Инструментальная
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'wmin')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'wmin')
 async def opl_wm_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1714,7 +1715,7 @@ async def opl_wm_in_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_wm_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_wm_in.preparation)
 async def opl_wm_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_wm_yes():    
@@ -1743,10 +1744,10 @@ async def opl_wm_in(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -1773,7 +1774,7 @@ async def opl_wm_in(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_wm_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_wm_in.preparation)
 async def opl_wm_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -1782,15 +1783,15 @@ async def opl_wm_in(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_wm_in.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_wm_in.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_wm_in.summ)
 async def opl_wm_in(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1821,20 +1822,20 @@ async def opl_wm_in(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
 ### Оплата Водоснабжение Дом
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'wtdm')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'wtdm')
 async def opl_wt_dm_pok(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.answer('Укажи показания счетчика воды.')
     await state.set_state(Opl_wt_dm.pok_wt)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_wt_dm.pok_wt)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_wt_dm.pok_wt)
 async def opl_wt_dm_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_wt=msg.text)
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1867,7 +1868,7 @@ async def opl_wt_dm_preparetion(msg: Message, state: FSMContext):
     else:
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_wt_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_wt_dm.preparation)
 async def opl_wt_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_wt_yes():    
@@ -1897,10 +1898,10 @@ async def opl_wt_dm(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -1928,7 +1929,7 @@ async def opl_wt_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_wt_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_wt_dm.preparation)
 async def opl_wt_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -1937,15 +1938,15 @@ async def opl_wt_dm(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_wt_dm.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_wt_dm.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_wt_dm.summ)
 async def opl_wt_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -1977,14 +1978,14 @@ async def opl_wt_dm(msg: Message, state: FSMContext):
         await state.clear()
 
 # Оплата Водоснабжения Петровская
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'wtpt')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'wtpt')
 async def opl_wt_pt_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2016,7 +2017,7 @@ async def opl_wt_pt_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_wt_pt.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_wt_pt.preparation)
 async def opl_wt_pt(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_wt_yes():    
@@ -2045,10 +2046,10 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -2075,7 +2076,7 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_wt_pt.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_wt_pt.preparation)
 async def opl_wt_pt(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -2084,15 +2085,15 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_wt_pt.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_wt_pt.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_wt_pt.summ)
 async def opl_wt_pt(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2124,14 +2125,14 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
 
 # Оплата Водоснабжения Инструментальная
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'wtin')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'wtin')
 async def opl_wt_in_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2163,7 +2164,7 @@ async def opl_wt_in_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_wt_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_wt_in.preparation)
 async def opl_wt_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_wt_yes():    
@@ -2192,10 +2193,10 @@ async def opl_wt_in(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -2222,7 +2223,7 @@ async def opl_wt_in(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_wt_in.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_wt_in.preparation)
 async def opl_wt_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -2231,15 +2232,15 @@ async def opl_wt_in(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_wt_in.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_wt_in.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_wt_in.summ)
 async def opl_wt_in(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2271,20 +2272,20 @@ async def opl_wt_in(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
 
 ### Оплата Электроснабжение Дом
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'ltdm')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'ltdm')
 async def opl_lt_dm_pok(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.answer('Укажи показания счетчика электроэнергии.')
     await state.set_state(Opl_lt_dm.pok_lt)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_lt_dm.pok_lt)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_lt_dm.pok_lt)
 async def opl_lt_dm_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_lt=msg.text)
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2317,7 +2318,7 @@ async def opl_lt_dm_preparetion(msg: Message, state: FSMContext):
     else:
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_lt_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_lt_dm.preparation)
 async def opl_lt_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_lt_yes():    
@@ -2347,10 +2348,10 @@ async def opl_lt_dm(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -2378,7 +2379,7 @@ async def opl_lt_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_lt_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_lt_dm.preparation)
 async def opl_lt_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -2387,15 +2388,15 @@ async def opl_lt_dm(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_lt_dm.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_lt_dm.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_lt_dm.summ)
 async def opl_lt_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2427,20 +2428,20 @@ async def opl_lt_dm(msg: Message, state: FSMContext):
         await state.clear()
 
 ### Оплата Электроснабжение Петровская
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'ltpt')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'ltpt')
 async def opl_lt_pt_pok(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.answer('Укажи показания счетчика электроэнергии.')
     await state.set_state(Opl_lt_pt.pok_lt)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_lt_pt.pok_lt)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_lt_pt.pok_lt)
 async def opl_lt_pt_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_lt=msg.text)
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2473,7 +2474,7 @@ async def opl_lt_pt_preparetion(msg: Message, state: FSMContext):
     else:
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_lt_pt.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_lt_pt.preparation)
 async def opl_lt_pt(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_lt_yes():    
@@ -2503,10 +2504,10 @@ async def opl_lt_pt(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -2534,7 +2535,7 @@ async def opl_lt_pt(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_lt_pt.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_lt_pt.preparation)
 async def opl_lt_pt(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -2543,15 +2544,15 @@ async def opl_lt_pt(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_lt_pt.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_lt_pt.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_lt_pt.summ)
 async def opl_lt_pt(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2583,20 +2584,20 @@ async def opl_lt_pt(msg: Message, state: FSMContext):
         await state.clear()
 
 ### Оплата Газоснабжения Дом
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gzdm')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'gzdm')
 async def opl_gz_dm_pok(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.answer('Укажи показания счетчика газа.')
     await state.set_state(Opl_gz_dm.pok_gz)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gz_dm.pok_gz)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_gz_dm.pok_gz)
 async def opl_gz_dm_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_gz=msg.text)
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2631,7 +2632,7 @@ async def opl_gz_dm_preparetion(msg: Message, state: FSMContext):
     else:
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_gz_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_gz_dm.preparation)
 async def opl_gz_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_gz_yes():    
@@ -2661,10 +2662,10 @@ async def opl_gz_dm(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -2692,7 +2693,7 @@ async def opl_gz_dm(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_gz_dm.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_gz_dm.preparation)
 async def opl_gz_dm(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -2701,15 +2702,15 @@ async def opl_gz_dm(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_gz_dm.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gz_dm.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_gz_dm.summ)
 async def opl_gz_dm(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2743,20 +2744,20 @@ async def opl_gz_dm(msg: Message, state: FSMContext):
         await state.clear()
 
 ### Оплата Газоснабжения Петровская
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gzpt')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'gzpt')
 async def opl_gz_pt_pok(call: CallbackQuery, state: FSMContext):
     await state.clear()
     await call.message.answer('Укажи показания счетчика газа.')
     await state.set_state(Opl_gz_pt.pok_gz)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gz_pt.pok_gz)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_gz_pt.pok_gz)
 async def opl_gz_pt_preparetion(msg: Message, state: FSMContext):        
     await state.update_data(pok_gz=msg.text)
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2791,7 +2792,7 @@ async def opl_gz_pt_preparetion(msg: Message, state: FSMContext):
     else:
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_gz_pt.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_gz_pt.preparation)
 async def opl_gz_pt(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_gz_yes():    
@@ -2821,10 +2822,10 @@ async def opl_gz_pt(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -2852,7 +2853,7 @@ async def opl_gz_pt(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_pt())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_gz_pt.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_gz_pt.preparation)
 async def opl_gz_pt(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -2861,15 +2862,15 @@ async def opl_gz_pt(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_gz_pt.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gz_pt.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_gz_pt.summ)
 async def opl_gz_pt(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2903,14 +2904,14 @@ async def opl_gz_pt(msg: Message, state: FSMContext):
         await state.clear()
 
 # Оплата Газоснабжения Фрунзе
-@router_jkh.callback_query(F.from_user.id == config_jkh.tg_user_id, F.data == 'gzfr')
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'gzfr')
 async def opl_gz_fr_preparetion(call: CallbackQuery, state: FSMContext):
     await state.clear()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:
@@ -2944,7 +2945,7 @@ async def opl_gz_fr_preparetion(call: CallbackQuery, state: FSMContext):
     else:
         await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_fr())
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Да', Opl_gz_fr.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_gz_fr.preparation)
 async def opl_gz_fr(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_gz_yes():    
@@ -2973,10 +2974,10 @@ async def opl_gz_fr(msg: Message, state: FSMContext):
             summ_sq = str(summ).replace(',', '.')
             summ_sql = str(summ_sq).replace(' ', '')
             connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
             cursor = connection.cursor()
             try:
@@ -3003,7 +3004,7 @@ async def opl_gz_fr(msg: Message, state: FSMContext):
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_fr())
         await state.clear()
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text == 'Нет', Opl_gz_fr.preparation)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_gz_fr.preparation)
 async def opl_gz_fr(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
@@ -3012,15 +3013,15 @@ async def opl_gz_fr(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_gz_fr.summ)
 
-@router_jkh.message(F.from_user.id == config_jkh.tg_user_id, F.text, Opl_gz_fr.summ)
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_gz_fr.summ)
 async def opl_gz_fr(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
-              host=config_jkh.con_sql[0],
-              user=config_jkh.con_sql[1],
-              password=config_jkh.con_sql[2],
-              database=config_jkh.con_sql[3]
+              host=settings.con_sql[0],
+              user=settings.con_sql[1],
+              password=settings.con_sql[2],
+              database=settings.con_sql[3]
             )
     cursor = connection.cursor()
     try:

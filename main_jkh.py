@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 
 from aiogram import Bot, Dispatcher
@@ -9,7 +8,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.types import BotCommand, BotCommandScopeDefault
 
 
-import config_jkh
+from config_jkh import settings
 from handlers_jkh import router_jkh
 
 async def set_commands():
@@ -18,7 +17,7 @@ async def set_commands():
     await bot.set_my_commands(commands, BotCommandScopeDefault()) # Устанавливает видимые пользователям команды бота
 
 # созданиие бота для работы с TelegramAPI, с форматированиием сообщений в формате HTML
-bot = Bot(token=config_jkh.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 
 
@@ -35,8 +34,6 @@ async def main():
 
 
 if __name__ == "__main__":
-    # запуск системы логирирования, где уровень логирирования начинается с INFO
-    logging.basicConfig(level=logging.INFO)
     # используется в качестве основной точки входа в программу
     asyncio.run(main())
                                                                                                                                                                    

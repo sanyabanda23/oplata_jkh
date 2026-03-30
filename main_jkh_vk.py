@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from vkbottle import Bot as VKBot
 from vkbottle.bot import Message
@@ -10,11 +9,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-import config_jkh
+
+from config_jkh import settings
 from handlers_jkh_vk import router_vk
 
 # Создание VK‑бота
-vk_bot = VKBot(token=config_jkh.BOT_TOKEN_VK)
+vk_bot = VKBot(token=settings.BOT_TOKEN_VK)
 
 def run_bot():
     """Асинхронная функция запуска бота"""

@@ -14,7 +14,8 @@ from vkbottle.dispatch.rules.base import ABCRule
 from vkbottle import CtxStorage
 
 import mysql.connector as con
-import config_jkh, utils_jkh, text_jkh, kb_jkh_vk
+import utils_jkh, text_jkh, kb_jkh_vk
+from config_jkh import settings
 
 # Создаём Labeler (аналог Dispatcher в aiogram)
 router_vk = BotLabeler()
