@@ -405,7 +405,7 @@ def select_from_pay_month(month):
         cursor = connection.cursor()
         # sql запрос
         select = f''' SELECT name, num, date, usl, summ, pokaz FROM pay JOIN flat_ls ON flat_ls.kf = pay.kf
-        WHERE MONTH(date)={month} '''
+        WHERE MONTH(date)={month} AND YEAR(date) = YEAR(CURDATE()) '''
         #метод объекта курсора, который выполняет SQL-запрос
         cursor.execute(select)
         # метод в Python, который извлекает все строки результата запроса и возвращает их в виде списка кортежей.
@@ -1305,26 +1305,41 @@ class SBOL:
                                     button_next = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[2]/div/div[1]/button')
                                     if click_element(button_next): # кнопка далее
                                         print(f'Значение pok = {pok} {type(pok)}')
-                                        if pok == 0:
+                                        if pok == 0 or pok == '0':
                                             success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[4]/div/div[1]/input') 
                                             is_logged_in = check_login_success(self.driver, success_locator)
                                             if is_logged_in:
                                                 print("Ввел лицевой счет")
                                                 summ_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[4]/div/div[1]/input')
-                                                if summ_input:
+                                                input_value = summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', '')
+                                                if len(input_value)==0:
+                                                    input_value = 0
+                                                else:
+                                                    input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
+                                                    print(f'INPUT_VALUE = {input_value}')
+                                                    print(f'Тип данных summ - {summ} - {type(summ)}')
+                                                if summ == '1.0':
+                                                    if input_value > 0:
+                                                        button_next = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[5]/div/div[1]/button')
+                                                    else:
+                                                        input_text(summ_input, f'0{summ}')
+                                                        button_next = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[5]/div/div[1]/button')
+                                                        print('ВВОЖУ ПОСЛЕ ПРОВЕРКИ INPUT_VALUE')
+                                                else:
                                                     input_text(summ_input, f'0{summ}')
                                                     button_next = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[5]/div/div[1]/button')
-                                                    if click_element(button_next): # кнопка далее
-                                                        success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[7]/div/div/input') 
-                                                        is_logged_in = check_login_success(self.driver, success_locator)
-                                                        if is_logged_in:
-                                                            print("Ввел сумму оплаты")
-                                                            input_element = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[7]/div/div/input')
-                                                            input_value = input_element.get_attribute("value")
-                                                            return [True, input_value]
-                                                        else:
-                                                            print("Сумма не введена")
-                                                            return [False]
+                                                    print('ВВОЖУ ПОСЛЕ ПРОВЕРКИ SUMM')
+                                                if click_element(button_next): # кнопка далее
+                                                    success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[7]/div/div/input') 
+                                                    is_logged_in = check_login_success(self.driver, success_locator)
+                                                    if is_logged_in:
+                                                        print("Ввел сумму оплаты")
+                                                        input_element = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[7]/div/div/input')
+                                                        input_value = input_element.get_attribute("value")
+                                                        return [True, input_value]
+                                                    else:
+                                                        print("Сумма не введена")
+                                                        return [False]
                                             else:
                                                 print("Не ввел лицевой счет")
                                                 return [False]

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from vkbottle import Bot as VKBot
 from vkbottle.bot import Message

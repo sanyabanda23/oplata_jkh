@@ -1862,7 +1862,7 @@ async def opl_wt_dm_preparetion(msg: Message, state: FSMContext):
     await msg.answer(text_jkh.preparation_pay)
     input_value = driver_jkh.oplata_wt(inn=inn, l_sch=l_sch, pok=data_pokaz.get('pok_wt'), summ=summ)
     if input_value[0] is True:
-        await msg.answer(text_jkh.question_pay_wt.format(input_value[2], input_value[1]), reply_markup=kb_jkh.yes_no_kb)
+        await msg.answer(text_jkh.question_pay_wt.format('0', input_value[1]), reply_markup=kb_jkh.yes_no_kb)
         await state.set_state(Opl_wt_dm.preparation)
     else:
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_dm())
