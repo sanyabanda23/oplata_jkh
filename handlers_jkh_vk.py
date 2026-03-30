@@ -1,5 +1,12 @@
 import asyncio
 import json
+import logging
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 from vkbottle.framework.labeler import BotLabeler
 from vkbottle.bot import Message
@@ -30,10 +37,12 @@ class PayloadABCRule(ABCRule[Message]):
         payload = message.payload
         if not payload:
             return False
+        else:
+            payload_dict = json.loads(payload)
         
         # Проверяем, что payload - это JSON
-        if isinstance(payload, dict):
-            cmd_value = payload.get("cmd")
+        if isinstance(payload_dict, dict):
+            cmd_value = payload_dict.get("cmd")
             return cmd_value == self.cmd if cmd_value else False
         else:
             return False
@@ -47,6 +56,7 @@ async def start_handler(message: Message):
         await vk_bot.state_dispenser.delete(message.peer_id)
     except KeyError:
         pass  # Состояние не найдено — игнорируем
+    logger.info("Вызвано главное меню")
     await message.answer(text_jkh.hello_text, keyboard=kb_jkh_vk.start_kb())
 
 ### Реакция на кнопку гравное меню
@@ -57,6 +67,7 @@ async def main_menu(message: Message):
     except KeyError:
         pass  # Состояние не найдено — игнорируем
     driver_jkh.quit_driver()
+    logger.info("Вызвано главное меню")
     await message.answer('Главное меню', keyboard=kb_jkh_vk.start_kb())
 
 @router_vk.message(MyRule(), PayloadABCRule('main_menu_info'))
@@ -65,11 +76,13 @@ async def main_menu_info(message: Message):
         await vk_bot.state_dispenser.delete(message.peer_id)
     except KeyError:
         pass  # Состояние не найдено — игнорируем
+    logger.info("Вызвано главное меню")
     await message.answer('Главное меню', keyboard=kb_jkh_vk.start_kb())
 
 ### Формирование отчетов
 @router_vk.message(MyRule(), PayloadABCRule('info_pay_rek'))
 async def vibor_info(message: Message):
+    logger.info(f"Вызвано меню отчетов. cmd={message.payload}")
     try:
         await vk_bot.state_dispenser.delete(message.peer_id)
     except KeyError:
@@ -78,8 +91,15 @@ async def vibor_info(message: Message):
 
 @router_vk.message(MyRule(), PayloadABCRule('info_rek'))
 async def vibor_info_rek(message: Message):
+    logger.info(f"cmd={message.payload}")
     try:
         await vk_bot.state_dispenser.delete(message.peer_id)
     except KeyError:
         pass  # Состояние не найдено — игнорируем
     await message.answer('Выбери тип отчета о реквизитах', keyboard=kb_jkh_vk.vibor_info_post_lsch_kb())
+
+
+
+@router_vk.message()
+async def check_all(message: Message):
+    logger.info(f"Вызвано меню отчетов. cmd={message.payload}")
