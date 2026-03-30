@@ -24,8 +24,19 @@ class Settings(BaseSettings):
     
 
     model_config = SettingsConfigDict(
-        env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+        env_file=".env",
+        env_file_encoding="utf-8"
     )
+
+# Диагностика: проверяем существование .env
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if not os.path.exists(env_path):
+    logger.error(f".env file not found at: {env_path}")
+    logger.info("Current directory: " + os.getcwd())
+    logger.info("Files here: " + str(os.listdir(".")))
+    raise FileNotFoundError(f".env file not found: {env_path}")
+else:
+    logger.info(f".env file found at: {env_path}")
 
 
 # Инициализация конфигурации

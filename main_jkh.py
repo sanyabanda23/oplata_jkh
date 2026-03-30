@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 
 from aiogram import Bot, Dispatcher
@@ -34,6 +35,8 @@ async def main():
 
 
 if __name__ == "__main__":
+    # запуск системы логирирования, где уровень логирирования начинается с INFO
+    logging.basicConfig(level=logging.INFO)
     # используется в качестве основной точки входа в программу
     asyncio.run(main())
                                                                                                                                                                    
