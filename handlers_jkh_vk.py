@@ -49,3 +49,37 @@ async def start_handler(message: Message):
         pass  # Состояние не найдено — игнорируем
     await message.answer(text_jkh.hello_text, keyboard=kb_jkh_vk.start_kb())
 
+### Реакция на кнопку гравное меню
+@router_vk.message(MyRule(), PayloadABCRule('main_menu'))
+async def main_menu(message: Message):
+    try:
+        await vk_bot.state_dispenser.delete(message.peer_id)
+    except KeyError:
+        pass  # Состояние не найдено — игнорируем
+    driver_jkh.quit_driver()
+    await message.answer('Главное меню', keyboard=kb_jkh_vk.start_kb())
+
+@router_vk.message(MyRule(), PayloadABCRule('main_menu_info'))
+async def main_menu_info(message: Message):
+    try:
+        await vk_bot.state_dispenser.delete(message.peer_id)
+    except KeyError:
+        pass  # Состояние не найдено — игнорируем
+    await message.answer('Главное меню', keyboard=kb_jkh_vk.start_kb())
+
+### Формирование отчетов
+@router_vk.message(MyRule(), PayloadABCRule('info_pay_rek'))
+async def vibor_info(message: Message):
+    try:
+        await vk_bot.state_dispenser.delete(message.peer_id)
+    except KeyError:
+        pass  # Состояние не найдено — игнорируем
+    await message.answer(text_jkh.vibor_info, keyboard=kb_jkh_vk.vibor_info_rek_kb())
+
+@router_vk.message(MyRule(), PayloadABCRule('info_rek'))
+async def vibor_info_rek(message: Message):
+    try:
+        await vk_bot.state_dispenser.delete(message.peer_id)
+    except KeyError:
+        pass  # Состояние не найдено — игнорируем
+    await message.answer('Выбери тип отчета о реквизитах', keyboard=kb_jkh_vk.vibor_info_post_lsch_kb())
