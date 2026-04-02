@@ -33,3 +33,14 @@ def vibor_info_post_lsch_kb():
         .add(Text("◀️ Главное меню", payload={"cmd": "main_menu_info"}))
     )
     return keyboard
+
+def vibor_info_pay():
+    keyboard = (
+        Keyboard(one_time=False, inline=True)
+        .add(Text("🔎Информация за месяц", payload={"cmd": "info_pay_mon"}))
+        .row()
+        .add(Text("🔎Информация по объекту и поставщику", payload={"cmd": "info_pay_kf_kp"}))
+        .row()
+        .add(Text("◀️ Главное меню", payload={"cmd": "main_menu_info"}))
+    )
+    return keyboard
