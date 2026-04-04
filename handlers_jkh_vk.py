@@ -17,6 +17,7 @@ from vkbottle import CtxStorage, DocMessagesUploader
 import mysql.connector as con
 import utils_jkh, text_jkh, kb_jkh_vk
 from config_jkh import settings
+from state_jkh_vk import (Info_pay_mon)
 
 # Создаём Labeler (аналог Dispatcher в aiogram)
 router_vk = BotLabeler()
@@ -86,7 +87,7 @@ async def main_menu_info(message: Message):
 ### Формирование отчетов
 @router_vk.message(MyRule(), PayloadABCRule('info_pay_rek'))
 async def vibor_info(message: Message):
-    logger.info(f"Вызвано меню отчетов. cmd={message.payload}")
+    logger.debug(f"Вызвано меню отчетов. cmd={message.payload}")
     try:
         await vk_bot.state_dispenser.delete(message.peer_id)
     except KeyError:
@@ -95,7 +96,7 @@ async def vibor_info(message: Message):
 
 @router_vk.message(MyRule(), PayloadABCRule('info_rek'))
 async def vibor_info_rek(message: Message):
-    logger.info(f"Информация о реквизитах. cmd={message.payload}")
+    logger.debug(f"Информация о реквизитах. cmd={message.payload}")
     try:
         await vk_bot.state_dispenser.delete(message.peer_id)
     except KeyError:
@@ -104,7 +105,7 @@ async def vibor_info_rek(message: Message):
 
 @router_vk.message(MyRule(), PayloadABCRule('info_pay'))
 async def vibor_info_pay(message: Message):
-    logger.info(f"Информация о платежах. cmd={message.payload}")
+    logger.debug(f"Информация о платежах. cmd={message.payload}")
     try:
         await vk_bot.state_dispenser.delete(message.peer_id)
     except KeyError:
@@ -113,7 +114,7 @@ async def vibor_info_pay(message: Message):
 
 @router_vk.message(MyRule(), PayloadABCRule('info_pos'))
 async def vibor_rek_pos_info(message: Message):
-    logger.info(f"Реквизиты поставщиков. cmd={message.payload}")
+    logger.debug(f"Реквизиты поставщиков. cmd={message.payload}")
     try:
         await vk_bot.state_dispenser.delete(message.peer_id)
     except KeyError:
@@ -129,7 +130,7 @@ async def vibor_rek_pos_info(message: Message):
 
 @router_vk.message(MyRule(), PayloadABCRule('info_lsch'))
 async def vibor_rek_lsch_info(message: Message):
-    logger.info(f"Лицевые счета. cmd={message.payload}")
+    logger.debug(f"Лицевые счета. cmd={message.payload}")
     try:
         await vk_bot.state_dispenser.delete(message.peer_id)
     except KeyError:
@@ -146,8 +147,28 @@ async def vibor_rek_lsch_info(message: Message):
     logger.debug(f"Загрузка файла: {upload_end - upload_start:.2f} сек")
     await message.answer('Отправляю вам отчет в формате PDF', attachment=doc)
 
+@router_vk.message(MyRule(), PayloadABCRule('info_pay_mon'))
+async def info_pay_mon(message: Message):
+    logger.debug(f"Лицевые счета. cmd={message.payload}")
+    try:
+        await vk_bot.state_dispenser.delete(message.peer_id)
+    except KeyError:
+        pass  # Состояние не найдено — игнорируем
+    await message.answer(text_jkh.info_pay_mon)
+    await vk_bot.state_dispenser.set(message.peer_id, Info_pay_mon.mon)
 
-
+@router_vk.message(MyRule(), state=Info_pay_mon.mon)
+async def info_pay_mon(message: Message):
+    data_mon = message.text
+    await message.answer('Отчет формируется')
+    summ = utils_jkh.select_from_pay_month(month=data_mon)
+    doc = await doc_uploader.upload(
+            file_source="month_pay.pdf",
+            peer_id=message.peer_id,
+        )
+    await message.answer(f'Cумма платежей составила - {summ}')
+    await message.answer('Отправляю вам отчет в формате PDF', attachment=doc)
+    await vk_bot.state_dispenser.delete(message.peer_id)
 
 @router_vk.message()
 async def check_all(message: Message):
