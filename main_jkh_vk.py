@@ -1,7 +1,7 @@
 import logging
 from vkbottle import Bot as VKBot
 from vkbottle.bot import Message
-
+from vkbottle import BuiltinStateDispenser
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
@@ -15,6 +15,7 @@ from handlers_jkh_vk import router_vk
 
 # Создание VK‑бота
 vk_bot = VKBot(token=settings.BOT_TOKEN_VK)
+vk_bot.state_dispenser = BuiltinStateDispenser()
 
 def run_bot():
     """Асинхронная функция запуска бота"""

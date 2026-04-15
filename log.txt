@@ -1381,3 +1381,17 @@ Traceback (most recent call last):
           └ <class 'vkbottle.exception_factory.base_exceptions.VKAPIError'>
 
 vkbottle.exception_factory.base_exceptions.VKAPIError_27: Group authorization failed: method is unavailable with group auth.
+2026-04-04 at 12:11:51 | INFO | Loop will be run forever
+2026-04-04 at 12:11:51 | INFO | Starting BotPolling for <API token_generator=<<class 'vkbottle.api.token_generator.single.SingleTokenGenerator'>>...>
+2026-04-04 at 13:29:28 | INFO | Loop will be run forever
+2026-04-04 at 13:29:28 | INFO | Starting BotPolling for <API token_generator=<<class 'vkbottle.api.token_generator.single.SingleTokenGenerator'>>...>
+2026-04-04 at 13:36:48 | INFO | Loop will be run forever
+2026-04-04 at 13:36:48 | INFO | Starting BotPolling for <API token_generator=<<class 'vkbottle.api.token_generator.single.SingleTokenGenerator'>>...>
+2026-04-04 at 13:47:27 | INFO | Loop will be run forever
+2026-04-04 at 13:47:27 | INFO | Starting BotPolling for <API token_generator=<<class 'vkbottle.api.token_generator.single.SingleTokenGenerator'>>...>
+2026-04-04 at 13:57:00 | INFO | Loop will be run forever
+2026-04-04 at 13:57:00 | INFO | Starting BotPolling for <API token_generator=<<class 'vkbottle.api.token_generator.single.SingleTokenGenerator'>>...>
+2026-04-04 at 13:58:11 | INFO | Loop will be run forever
+2026-04-04 at 13:58:11 | INFO | Starting BotPolling for <API token_generator=<<class 'vkbottle.api.token_generator.single.SingleTokenGenerator'>>...>
+2026-04-07 at 15:07:29 | INFO | Loop will be run forever
+2026-04-07 at 15:07:29 | INFO | Starting BotPolling for <API token_generator=<<class 'vkbottle.api.token_generator.single.SingleTokenGenerator'>>...>
