@@ -64,6 +64,8 @@ class Opl_wt_pt(StatesGroup):
     summ = State()
 
 class Opl_wt_in(StatesGroup):
+    pok_hwt = State()
+    pok_cwt = State()
     preparation = State()
     summ = State()
 

@@ -2132,8 +2132,23 @@ async def opl_wt_pt(msg: Message, state: FSMContext):
 
 # Оплата Водоснабжения Инструментальная
 @router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'wtin')
-async def opl_wt_in_preparetion(call: CallbackQuery, state: FSMContext):
+async def opl_wt_in_pok_hwt(call: CallbackQuery, state: FSMContext):
     await state.clear()
+    await call.message.answer('Укажи показания счетчика горячей воды.')
+    await state.set_state(Opl_wt_in.pok_hwt)
+
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_wt_in.pok_hwt)
+async def opl_wt_in_cwt(msg: Message, state: FSMContext):        
+    await state.update_data(pok_hwt=msg.text)
+    async with ChatActionSender.typing(bot=b, chat_id=msg.chat.id):
+        # Приостанавливается выполнение асинхронной функции на 2 секунды (как будто бот печатает сообщение)
+        await asyncio.sleep(2)
+        await msg.answer('Укажи показания счетчика холодной воды.')
+    await state.set_state(Opl_wt_in.pok_cwt)    
+    
+@router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_wt_in.pok_cwt)
+async def opl_wt_in_preparetion(msg: Message, state: FSMContext):        
+    await state.update_data(pok_cwt=msg.text)
     connection = con.connect(
               host=settings.con_sql[0],
               user=settings.con_sql[1],
@@ -2149,7 +2164,6 @@ async def opl_wt_in_preparetion(call: CallbackQuery, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        pok = data[0][2]
         summ = str(data[0][3])
         connection.commit()
         print('Данные получены')
@@ -2162,19 +2176,22 @@ async def opl_wt_in_preparetion(call: CallbackQuery, state: FSMContext):
         # Когда вы завершаете работу с курсором, например, после выполнения всех операций, важно закрыть как курсор, так и соединение
         cursor.close()
         connection.close()
-    await call.answer(text_jkh.preparation_pay)
-    input_value = driver_jkh.oplata_wt(inn=inn, l_sch=l_sch, pok=pok, summ=summ)
+    data_pokaz = await state.get_data()
+    await msg.answer(text_jkh.preparation_pay)
+    input_value = driver_jkh.oplata_wt_in(inn=inn, l_sch=l_sch, c_pok=data_pokaz.get('pok_cwt'), h_pok=data_pokaz.get('pok_hwt'), summ=summ)
     if input_value[0] is True:
-        await call.message.answer(text_jkh.question_pay.format(input_value[1]), reply_markup=kb_jkh.yes_no_kb)
+        await msg.answer(text_jkh.question_pay_wt_in.format(input_value[2], input_value[3], input_value[1]), reply_markup=kb_jkh.yes_no_kb)
         await state.set_state(Opl_wt_in.preparation)
     else:
-        await call.message.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
+        await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
+
 
 @router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Да', Opl_wt_in.preparation)
 async def opl_wt_in(msg: Message, state: FSMContext):        
     await state.update_data(preparetion=msg.text)
     if driver_jkh.oplata_wt_yes():    
         rekviz = utils_jkh.get_info_from_chek()
+        data_pokaz = await state.get_data()
         if rekviz:
             num = rekviz[0]
             date = rekviz[1]
@@ -2182,6 +2199,8 @@ async def opl_wt_in(msg: Message, state: FSMContext):
             card = rekviz[3]
             summ = rekviz[4]
             pokaz = rekviz[5]
+            pokaz_cwt = data_pokaz.get('pok_cwt')
+            pokaz_hwt = data_pokaz.get('pok_hwt')
             chek = f'<b>************Чек по операции************</b>\n' \
                    f'<b>Дата и время платежа</b>\n' \
                    f'{date:>45}\n' \
@@ -2189,8 +2208,10 @@ async def opl_wt_in(msg: Message, state: FSMContext):
                    f'{num:>45}\n' \
                    f'<b>Вид услуги</b>\n' \
                    f'{usl:>45}\n' \
-                   f'<b>Показания счетчика</b>\n' \
-                   f'{pokaz:>45}\n' \
+                   f'<b>Показания счетчика холодной воды</b>\n' \
+                   f'{pokaz_cwt:>45}\n' \
+                   f'<b>Показания счетчика горячей воды</b>\n' \
+                   f'{pokaz_hwt:>45}\n' \
                    f'<b>Способ оплаты</b>\n' \
                    f'{card:>45} \n' \
                    f'<b>Сумма платежа</b>\n' \
@@ -2206,9 +2227,17 @@ async def opl_wt_in(msg: Message, state: FSMContext):
             )
             cursor = connection.cursor()
             try:
-                new_pay = (num, date_time_sql, usl, card, summ_sql, 'in', 'wt', pokaz)
+                new_pay = (num, date_time_sql, usl, card, summ_sql, 'in', 'wt', pokaz_cwt)
                 request_to_insert_data = ''' INSERT INTO pay (num, date, usl, card, summ, kf, kp, pokaz) VALUES (%s, %s, %s, %s, %s, %s, %s, %s); '''
                 cursor.execute(request_to_insert_data, new_pay)
+
+                new_pokaz_cwt = (pokaz_cwt, 'in', 'cwt')
+                request_to_update_pokaz_cwt = "UPDATE pokazania SET pokaz = %s WHERE kf = %s AND tip_wt = %s"
+                cursor.execute(request_to_update_pokaz_cwt, new_pokaz_cwt)
+
+                new_pokaz_hwt = (pokaz_hwt, 'in', 'hwt')
+                request_to_update_pokaz_hwt = "UPDATE pokazania SET pokaz = %s WHERE kf = %s AND tip_wt = %s"
+                cursor.execute(request_to_update_pokaz_hwt, new_pokaz_hwt) 
                 connection.commit()
                 print('Данные введены')
             except Exception as e:
@@ -2223,10 +2252,10 @@ async def opl_wt_in(msg: Message, state: FSMContext):
             await state.clear()
         else:
             print('Данные из чека не извлечены')
-            await msg.answer(text_jkh.falling_chek, reply_markup=kb_jkh.opl_zkh_in())
+            await msg.answer(text_jkh.falling_chek, reply_markup=kb_jkh.opl_zkh_fr())
             await state.clear()    
     else:
-        await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
+        await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_fr())
         await state.clear()
 
 @router_jkh.message(F.from_user.id == settings.tg_user_id, F.text == 'Нет', Opl_wt_in.preparation)
@@ -2238,8 +2267,9 @@ async def opl_wt_in(msg: Message, state: FSMContext):
         await msg.answer('Укажи сумму, которую собираешься оплатить.')
     await state.set_state(Opl_wt_in.summ)
 
+
 @router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Opl_wt_in.summ)
-async def opl_wt_in(msg: Message, state: FSMContext):        
+async def opl_in_wt(msg: Message, state: FSMContext):        
     await state.update_data(summ=msg.text)
     data_summ = await state.get_data()
     connection = con.connect(
@@ -2257,7 +2287,6 @@ async def opl_wt_in(msg: Message, state: FSMContext):
         data = cursor.fetchall()
         inn = data[0][0]
         l_sch = data[0][1]
-        pok = data[0][2]
         connection.commit()
         print('Данные получены')
     except Exception as e:
@@ -2270,12 +2299,13 @@ async def opl_wt_in(msg: Message, state: FSMContext):
         cursor.close()
         connection.close()
     await msg.answer(text_jkh.preparation_pay)
-    input_value = driver_jkh.oplata_wt(inn=inn, l_sch=l_sch, pok=pok, summ=data_summ.get('summ'))
+    input_value = driver_jkh.oplata_wt_in(inn=inn, l_sch=l_sch, c_pok=data_summ.get('pok_cwt'), h_pok=data_summ.get('pok_hwt'), summ=data_summ.get('summ'))
     if input_value[0] is True:
-        await msg.answer(text_jkh.question_pay.format(input_value[1]), reply_markup=kb_jkh.yes_no_kb)
+        await msg.answer(text_jkh.question_pay_wt_in.format(input_value[2], input_value[3], input_value[1]), reply_markup=kb_jkh.yes_no_kb)
         await state.set_state(Opl_wt_in.preparation)
     else:
         await msg.answer(text_jkh.falling_pay, reply_markup=kb_jkh.opl_zkh_in())
+        await state.clear()
 
 ### Оплата Электроснабжение Дом
 @router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'ltdm')
