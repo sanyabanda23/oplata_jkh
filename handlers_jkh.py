@@ -225,6 +225,12 @@ async def info_pay_year(call: CallbackQuery, state: FSMContext):
     await call.message.answer(text_jkh.info_pay_year)
     await state.set_state(Info_pay_year.year)
 
+@router_jkh.callback_query(F.from_user.id == settings.tg_user_id, F.data == 'wt', Info_pay_year.kp)
+async def info_pay_year(call: CallbackQuery, state: FSMContext):
+    await state.update_data(kp='wt')
+    await call.message.answer(text_jkh.info_pay_year)
+    await state.set_state(Info_pay_year.year)
+
 @router_jkh.message(F.from_user.id == settings.tg_user_id, F.text, Info_pay_year.year)
 async def info_pay_year(msg: Message, state: FSMContext):        
     await state.update_data(year=msg.text)
@@ -790,7 +796,7 @@ async def opl_kr_dm_preparetion(call: CallbackQuery, state: FSMContext):
         cursor.close()
         connection.close()
     await call.answer(text_jkh.preparation_pay)
-    input_value = driver_jkh.oplata_kr(inn=inn, l_sch=l_sch, summ=summ)
+    input_value = driver_jkh.oplata_kr_dm(inn=inn, l_sch=l_sch, summ=summ)
     if input_value[0] is True:
         await call.message.answer(text_jkh.question_pay.format(input_value[1]), reply_markup=kb_jkh.yes_no_kb)
         await state.set_state(Opl_kr_dm.preparation)

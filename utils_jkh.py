@@ -459,6 +459,7 @@ def select_from_pay_year(kf, kp, year):
         cursor.execute(select)
         # метод в Python, который извлекает все строки результата запроса и возвращает их в виде списка кортежей.
         data = cursor.fetchall()
+        print(data)
         # метод commit сохраняет все изменения, внесённые в рамках транзакции, и делает их постоянными
         connection.commit()
         print('Данные выведены')
@@ -668,7 +669,82 @@ class SBOL:
             else:
                 print('Не клинул элемент')
                 return [False]
-            
+
+    def oplata_kr_dm(self, inn: str, l_sch: str, summ: str):
+        if 'oplata_kr' in self.driver.window_handles:
+            self.driver.switch_to.window('oplata_kr')
+            open_website(settings.URL_payments)
+        else: 
+            open_tab(self.driver, settings.URL_payments, 'oplata_kr')
+        self.driver.set_window_size(1920, 1080)
+        success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
+        is_logged_in = check_login_success(self.driver, success_locator)
+        if is_logged_in:
+            inn_input = find_element(self.driver, By.XPATH, '//*[@id="text-field-1"]')
+        else:
+            if 'oplata_kr' in self.driver.window_handles:
+                self.driver.switch_to.window('oplata_kr')
+                open_website(settings.URL_payments_2)
+            else: 
+                open_tab(self.driver, settings.URL_payments_2, 'oplata_kr')
+                self.driver.set_window_size(1920, 1080)
+                success_locator = (By.XPATH, '//*[@id="text-field-1"]') 
+                is_logged_in = check_login_success(self.driver, success_locator)
+                if is_logged_in:
+                    inn_input = find_element(self.driver, By.XPATH, '//*[@id="text-field-1"]')
+        if inn_input:
+            input_text(inn_input, inn) # ввод инн
+            button_next = find_element(self.driver, By.XPATH, '//*[@id="main"]/div/div/div[2]/ul/li[4]/div/button')
+            if button_next:
+                self.driver.save_screenshot("screenshot_tutorialspoint.png")
+                if click_element(button_next): # кнопка далее
+                    success_locator = (By.XPATH, '//*[@id="main"]/div/div/div[2]/div[2]/ul/li[2]/a') 
+                    is_logged_in = check_login_success(self.driver, success_locator)
+                    if is_logged_in:
+                        print("Ввел инн")
+                        button_next = find_element(self.driver, By.XPATH, '//*[@id="main"]/div/div/div[2]/div[2]/ul/li[3]/a')
+                        if click_element(button_next): # переход по ссылке
+                            success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[1]/div/div[1]/input')
+                            is_logged_in = check_login_success(self.driver, success_locator)
+                            if is_logged_in:
+                                print("Перешел по ссылке кап ремонта")
+                                l_sch_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[1]/div/div[1]/input')
+                                if l_sch_input:
+                                    input_text(l_sch_input, l_sch) # ввод лицевого счета
+                                    button_next = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[2]/div/div[1]/button')
+                                    if click_element(button_next): # кнопка далее
+                                        success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[4]/div/div[1]/input') 
+                                        is_logged_in = check_login_success(self.driver, success_locator)
+                                        if is_logged_in:
+                                            print("Ввел лицевой счет")
+                                            summ_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[4]/div/div[1]/input')
+                                            if summ_input:
+                                                input_text(summ_input, f'0{summ}')
+                                                button_next = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[5]/div/div[1]/button')
+                                                if click_element(button_next): # кнопка далее
+                                                    success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[9]/div/div[1]/button') 
+                                                    is_logged_in = check_login_success(self.driver, success_locator)
+                                                    if is_logged_in:
+                                                        print("Ввел сумму оплаты")
+                                                        input_element = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[6]/div/div/input')
+                                                        input_value = input_element.get_attribute("value")
+                                                        return [True, input_value]
+                                                else:
+                                                    print("Сумма не введена")
+                                                    return [False]
+                                    else:
+                                        print("Не ввел лицевой счет")
+                                        return [False]
+                        else:
+                            print("Не перешел по ссылке")
+                            return [False]
+                    else:
+                        print("Не нашел ИНН")
+                        return [False]
+            else:
+                print('Не клинул элемент')
+                return [False]
+                        
     def oplata_kr_yes(self):
         self.driver.switch_to.window('oplata_kr')
         button_vibor_scheta = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[8]/div/button')
