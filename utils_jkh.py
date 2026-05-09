@@ -558,8 +558,11 @@ class SBOL:
                     is_logged_in = check_login_success(self.driver, success_locator)
                     if is_logged_in:
                         print("Перешел на страницу")
-                        time.sleep(10)
                         return True
+                    else:
+                        self.driver.save_screenshot("screenshot_tutorialspoint.png")
+                        self.driver.close()
+                        print('не перешел на страницу')
         else:
             self.driver.close()
             print('на кнопку не нажал')
@@ -580,14 +583,15 @@ class SBOL:
         input_text(okno_2, kod[1])
         input_text(okno_3, kod[2])
         input_text(okno_4, kod[3])
-        self.driver.save_screenshot("screenshot_tutorialspoint.png")
         if input_text(okno_5, kod[-1]):
-            success_locator = (By.XPATH, '//*[@id="main"]/div/div/section[1]/div[3]/div[2]/div/div[2]/div/div/div/div[1]/a') 
+            success_locator = (By.XPATH, '//*[@id="main"]/div/div/section/div[3]/div[2]/div/div[1]/button/div') 
             is_logged_in = check_login_success(self.driver, success_locator)
+            self.driver.save_screenshot("screenshot_tutorialspoint.png")
             if is_logged_in:
                 print("Вход в сбербанк онлайн выполнен")
                 return True
             else:
+                self.driver.save_screenshot("screenshot_tutorialspoint.png")
                 print("Не удалось перейти на страниицу")
                 return False
         else:
@@ -1420,16 +1424,18 @@ class SBOL:
                                                 print("Не ввел лицевой счет")
                                                 return [False]
                                         else:
+                                            print('Провожу ввод данных с учетом, что pok не равно 0')
                                             success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[6]/div/div[1]/input') 
                                             is_logged_in = check_login_success(self.driver, success_locator)
                                             if is_logged_in:
                                                 print("Ввел лицевой счет")
-                                                summ_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[6]/div/div[1]/input')
-                                                pok_input = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[5]/div/div[1]/input')
+                                                summ_input = find_element(self.driver, By.XPATH, '//div[2]/section/div[6]/div/div[1]/input')
+                                                pok_input = find_element(self.driver, By.XPATH, '//div[2]/section/div[5]/div/div[1]/input')
                                                 input_text(pok_input, pok)
                                                 input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
                                                 print(f'INPUT_VALUE = {input_value}')
                                                 print(f'Тип данных summ - {summ} - {type(summ)}')
+                                                self.driver.save_screenshot("screenshot_tutorialspoint.png")
                                                 if summ == '1.0':
                                                     if input_value > 0:
                                                         button_next = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[7]/div/div[1]/button')
@@ -1446,10 +1452,11 @@ class SBOL:
                                                     is_logged_in = check_login_success(self.driver, success_locator)
                                                     if is_logged_in:
                                                         print("Ввел сумму оплаты")
-                                                        input_element_summ = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[9]/div/div/input')
-                                                        input_element_pok = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[7]/div/div/input')
+                                                        input_element_summ = find_element(self.driver, By.XPATH, '//div[2]/section/div[9]/div/div/input')
+                                                        input_element_pok = find_element(self.driver, By.XPATH, '//div[2]/section/div[7]/div/div/input')
                                                         input_value_summ = input_element_summ.get_attribute("value")
                                                         input_value_pok = input_element_pok.get_attribute("value")
+                                                        self.driver.save_screenshot("screenshot_tutorialspoint.png")
                                                         return [True, input_value_summ, input_value_pok]
                                                     else:
                                                             print("Сумма не введена")
@@ -1469,6 +1476,7 @@ class SBOL:
                 return [False]
             
     def oplata_wt_in(self, inn: str, l_sch: str, c_pok: str, h_pok: str, summ: str):
+        print('Сработала oplata_wt_in')
         if 'oplata_wt' in self.driver.window_handles:
             self.driver.switch_to.window('oplata_wt')
             open_website(settings.URL_payments)
@@ -1511,32 +1519,38 @@ class SBOL:
                                     input_text(l_sch_input, l_sch) # ввод лицевого счета
                                     button_next = find_element(self.driver, By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/section/div[2]/div/div[1]/button')
                                     if click_element(button_next): # кнопка далее
-                                        success_locator = (By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[5]/div/div[1]/input') 
+                                        time.sleep(3)
+                                        success_locator = (By.XPATH, '//div[2]/section/div[1]/div')
                                         is_logged_in = check_login_success(self.driver, success_locator)
                                         if is_logged_in:
                                             print("Ввел лицевой счет")
-                                            pok_hwt_input = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[5]/div/div[1]/input')
-                                            pok_cwt_input = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[7]/div/div[1]/input')    
-                                            summ_input = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[8]/div/div[1]/input')
+                                            pok_hwt_input = find_element(self.driver, By.XPATH, '//div[2]/section/div[5]/div/div[1]/input')
+                                            pok_cwt_input = find_element(self.driver, By.XPATH, '//div[2]/section/div[7]/div/div[1]/input')    
+                                            summ_input = find_element(self.driver, By.XPATH, '//div[2]/section/div[8]/div/div[1]/input')
                                             input_text(pok_hwt_input, h_pok)
                                             input_text(pok_cwt_input, c_pok)
                                             input_value = float(summ_input.get_attribute("value").rstrip(' ₽').replace(',', '.').replace(' ', ''))
                                             print(f'INPUT_VALUE = {input_value}')
                                             print(f'Тип данных summ - {summ} - {type(summ)}')
-                                            if input_value > 0:
-                                                button_next = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[9]/div/div[1]/button')
+                                            if summ == '1.0':
+                                                if input_value > 0:
+                                                    button_next = find_element(self.driver, By.XPATH, '//div[2]/section/div[9]/div/div[1]/button')
+                                                else:
+                                                    input_text(summ_input, f'0{summ}')
+                                                    button_next = find_element(self.driver, By.XPATH, '//div[2]/section/div[9]/div/div[1]/button')
+                                                    print('ВВОЖУ ПОСЛЕ ПРОВЕРКИ INPUT_VALUE')
                                             else:
                                                 input_text(summ_input, f'0{summ}')
-                                                button_next = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[9]/div/div[1]/button')
+                                                button_next = find_element(self.driver, By.XPATH, '//div[2]/section/div[9]/div/div[1]/button')
                                                 print('ВВОЖУ ПОСЛЕ ПРОВЕРКИ INPUT_VALUE')
                                             if click_element(button_next): # кнопка далее
-                                                success_locator = (By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[14]/div/div[1]/button')
+                                                success_locator = (By.XPATH, '//div[2]/section/div[14]/div/div[1]/button')
                                                 is_logged_in = check_login_success(self.driver, success_locator)
                                                 if is_logged_in:
                                                     print("Ввел сумму оплаты")
-                                                    input_element_summ = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[11]/div/div/input')
-                                                    input_element_pok_hwt = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[7]/div/div/input')
-                                                    input_element_pok_cwt = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[9]/div/div/input')
+                                                    input_element_summ = find_element(self.driver, By.XPATH, '//div[2]/section/div[11]/div/div/input')
+                                                    input_element_pok_hwt = find_element(self.driver, By.XPATH, '//div[2]/section/div[7]/div/div/input')
+                                                    input_element_pok_cwt = find_element(self.driver, By.XPATH, '//div[2]/section/div[9]/div/div/input')
                                                     input_value_summ = input_element_summ.get_attribute("value")
                                                     input_value_pok_hwt = input_element_pok_hwt.get_attribute("value")
                                                     input_value_pok_cwt = input_element_pok_cwt.get_attribute("value")
@@ -1545,6 +1559,7 @@ class SBOL:
                                                     print("Сумма не введена")
                                                     return [False]
                                         else:
+                                            self.driver.save_screenshot("screenshot_tutorialspoint.png")
                                             print("Не ввел лицевой счет")
                                             return [False] 
 
@@ -1582,8 +1597,19 @@ class SBOL:
                 if click_element(button_next): # кнопка далее 
                     success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/div/div[2]/button')
             else:
-                print('Кнопка далее не нажата')
-                return False
+                success_locator = (By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[14]/div/div[1]/button') 
+                is_logged_in = check_login_success(self.driver, success_locator) 
+                if is_logged_in:
+                    button_vibor_scheta = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[13]/div/button')
+                    click_element(button_vibor_scheta) # выбрал счет
+                    button_mir = find_element(self.driver, By.XPATH, '/html/body/div[7]/ul/li[1]/button')                                                     
+                    click_element(button_mir) # выбрал карты мир 
+                    button_next = find_element(self.driver, By.XPATH, '/html/body/div[2]/div/main/div[5]/form/div[2]/section/div[14]/div/div[1]/button')
+                    if click_element(button_next): # кнопка далее 
+                        success_locator = (By.XPATH, '/html/body/div[1]/div/main/div[5]/form/div[2]/div/div[2]/button')
+                else:
+                    print('Кнопка далее не нажата')
+                    return False
         is_logged_in = check_login_success(self.driver, success_locator)
         if is_logged_in:
             print("Провел оплату")
